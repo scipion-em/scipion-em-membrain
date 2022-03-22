@@ -1,0 +1,4 @@
+Version 1.0
+Plugin skeleton for membrain
+Installation of membrain (CPU version) cloning from github
+Hello World protocol left but with a step activating membrain environment and running pip list.
