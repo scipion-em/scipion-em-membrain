@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     you (you@yourinstitution.email)
+# * Authors:     Ricardo D. Righetto (ricardo.righetto@unibas.ch)
 # *
-# * your institution
+# * University of Basel
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -28,39 +28,63 @@ import os.path
 import pwem
 from scipion.install.funcs import VOID_TGZ
 
-_logo = "icon.png"
-_references = ['you2019']
-__version__ = "3.0.0"
+# Environment variables are imported from here:
+from .constants import *
 
-MEMBRAIN_ENV_VAR = "MEMBRAIN_ENV"
-DEFAULT_MEMBRAIN_ENV ="MemBrain"
+_logo = "icon.png"
+_references = ['lamm_membrain_2022']
+__version__ = "0.1.0"
 
 class Plugin(pwem.Plugin):
     
     @classmethod
     def _defineVariables(cls):
         """ Defines variables for this plugin. scipion3 config -p membrain will show them with current values"""
-        cls._defineVar(MEMBRAIN_ENV_VAR, DEFAULT_MEMBRAIN_ENV)
+        cls._defineVar(MEMBRAIN_SEG_ENV_VAR, DEFAULT_MEMBRAIN_SEG_ENV)
+        cls._defineVar(MEMBRAIN_SEG_ENV_ACTIVATION_VAR, cls.getMemBrainSegActivation())
 
     @classmethod
-    def getMemBrainActivation(cls):
-        return "conda activate " + cls.getVar(MEMBRAIN_ENV_VAR)
+    def getMemBrainSegActivation(cls):
+        return "conda activate " + cls.getVar(MEMBRAIN_SEG_ENV_VAR)
 
     @classmethod
-    def getProgram(cls, program):
-        """ Return the full command to run a memBrain program. """
-        cmd = '%s %s && ' % (cls.getCondaActivationCmd(), cls.getMemBrainActivation())
-        return cmd + program
+    def getMemBrainCmd(cls):
+        """ Return the full command to run a MemBrain program. """
+        cmd = cls.getVar(MEMBRAIN_SEG_ACTIVATION_VAR)
+        if not cmd:
+            cmd = cls.getCondaActivationCmd()
+            cmd += cls.getVargetMemBrainActivation()
+        cmd += " && membrain"
+        return cmd
 
     @classmethod
     def defineBinaries(cls, env):
 
-        installed = "memBrainInstalled.txt"
-        membrain_commands = []
-        membrain_commands.append(("git clone https://github.com/CellArchLab/MemBrain.git", "MemBrain"))
-        membrain_commands.append(("cd MemBrain && " + cls.getCondaActivationCmd() + "conda env create -f MemBrain_requirements.yml && touch " + installed, os.path.join("MemBrain", installed)))
+        def defineMemBrainSegInstallation(version):
+            installed = "last-pull-%s.txt" % dt.now().strftime("%y%h%d-%H%M%S")
 
-        env.addPackage('membrain', version=1.0,
-                       commands=membrain_commands,
-                       tar=VOID_TGZ,
-                       default=True)
+            membrain_commands = [
+                ('git clone https://github.com/teamtomo/membrain-seg.git', 'membrain-seg'),
+                ('cd membrain-seg && git pull && touch ../%s' % installed, installed),
+                (getCondaInstallation(version), 'env-created.txt')
+            ]
+
+            env.addPackage('membrain-seg', version=version,
+                           commands=membrain_commands,
+                           tar=VOID_TGZ,
+                           default=True)
+
+        def getCondaInstallation(version):
+            installationCmd = cls.getCondaActivationCmd()
+            installationCmd += 'conda create --name ' + DEFAULT_MEMBRAIN_SEG_ENV + ' python=3.9 && '
+            installationCmd += cls.getMemBrainActivation() + ' && '
+            installationCmd += 'cd membrain-seg && '
+            installationCmd += 'pip install . && '
+            installationCmd += 'touch ../env-created.txt'
+
+        def getModelInstallation(model_version):
+
+            # wget download line obtained from: https://stackoverflow.com/a/39087286
+            modelInstallationCmd = 'curl -L -o ' + MEMBRAIN_SEG_MODEL + ' "https://drive.google.com/uc?export=download&id=' + FILEID + '&confirm=yes"'
+
+            env.addPackage('membrain-seg_models', version=model_version, commands=modelInstallationCmd, tar=VOID_TGZ, default=True)

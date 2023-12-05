@@ -27,11 +27,11 @@ with open('requirements.txt') as f:
 setup(
     name='scipion-em-membrain',  # Required
     version=__version__,  # Required
-    description='Scipion plugin template.',  # Required
+    description='MemBrain plugin for Scipion.',  # Required
     long_description=long_description,  # Optional
     url='https://github.com/scipion-em/scipion-em-membrain',  # Optional
-    author='you',  # Optional
-    author_email='you@yourinstitution.email',  # Optional
+    author='Ricardo D. Righetto',  # Optional
+    author_email='ricardo.righetto@unibas.ch',  # Optional
     keywords='scipion cryoem imageprocessing tomography scipion-3.0',  # Optional
     packages=find_packages(),
     install_requires=[requirements],
