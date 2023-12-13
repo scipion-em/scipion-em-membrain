@@ -46,7 +46,7 @@ MemBrain is a powerful and annotation-efficient tool for the detection of membra
 	urldate = {2022-07-18},
 	journal = {Computer Methods and Programs in Biomedicine},
 	author = {Lamm, Lorenz and Righetto, Ricardo D. and Wietrzynski, Wojciech and Pöge, Matthias and Martinez-Sanchez, Antonio and Peng, Tingying and Engel, Benjamin D.},
-	month = sep,
+	month = {sep},
 	year = {2022},
 	keywords = {Cryo-electron tomography, deep learning, membrane protein, particle picking, annotation-efficient, protein localization},
 	pages = {106990},

@@ -54,35 +54,46 @@ GDRIVE_FILEID = '1tSQIz_UCsQZNfyHg0RxD-4meFgolszo8'
 
 class Plugin(pwem.Plugin):
 
+    _url = 'https://github.com/scipion-em/scipion-em-membrain'
+    
     @classmethod
     def _defineVariables(cls):
         """ Defines variables for this plugin. scipion3 config -p membrain will show them with current values"""
         cls._defineVar(MEMBRAIN_SEG_ENV_VAR, DEFAULT_MEMBRAIN_SEG_ENV)
-        cls._defineVar(MEMBRAIN_SEG_ENV_ACTIVATION_VAR,
-                       cls.getMemBrainSegActivation())
-        cls._defineVar(MEMBRAIN_SEG_MODEL_VAR, MEMBRAIN_SEG_MODEL)
+        # cls._defineVar(MEMBRAIN_SEG_ENV_ACTIVATION_VAR, cls.getMemBrainSegActivation())
+        # cls._defineVar(MEMBRAIN_SEG_MODEL_VAR, MEMBRAIN_SEG_MODEL)
 
     @classmethod
     def getMemBrainSegActivation(cls):
         return "conda activate " + cls.getVar(MEMBRAIN_SEG_ENV_VAR)
 
     @classmethod
-    def getMemBrainCmd(cls):
+    def getMemBrainSegCmd(cls):
         """ Return the full command to run a MemBrain program. """
-        cmd = cls.getVar(MEMBRAIN_SEG_ACTIVATION_VAR)
+        cmd = cls.getVar(MEMBRAIN_SEG_ENV_ACTIVATION_VAR)
         if not cmd:
-            cmd = cls.getCondaActivationCmd()
-            cmd += cls.getVargetMemBrainActivation()
-        cmd += " && membrain"
+            cmd = cls.getCondaActivationCmd() + " "
+            cmd += cls.getMemBrainSegActivation()
+            cmd += " && membrain "
         return cmd
 
+    @classmethod
+    def getMemBrainSegModelPath(cls):
+        """ Return the current MemBrain-seg model defined by the environment variable """
+        model = cls.getVar(MEMBRAIN_SEG_MODEL_VAR)
+        if not model:
+            model = pwem.Config.EM_ROOT
+            model += "/" + MODEL_PKG_NAME + "-" + MODEL_VERSION
+            model += "/" + MEMBRAIN_SEG_MODEL
+        return model
+    
     @classmethod
     def defineBinaries(cls, env):
 
         def getCondaInstallation(version):
 
             installationCmd = cls.getCondaActivationCmd()
-            installationCmd += 'conda create -y --name ' + \
+            installationCmd += ' conda create -y --name ' + \
                 cls.getVar(MEMBRAIN_SEG_ENV_VAR) + ' python=3.9 && '
             installationCmd += cls.getMemBrainSegActivation() + ' && '
             installationCmd += 'cd membrain-seg && '
