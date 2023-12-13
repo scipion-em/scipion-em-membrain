@@ -14,7 +14,7 @@ The plugin is currently only available in development mode. To install, proceed 
 
     git clone https://github.com/scipion-em/scipion-em-membrain.git
 
-**Install this plugin in devel (editable) mode**
+**Install this plugin in devel (editable) mode:**
 
 .. code-block::
 
