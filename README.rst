@@ -50,7 +50,7 @@ The following protocols are currently implemented:
 
 Using GPU or CPU
 ................
-By default, MemBrain protocols assume that a GPU card is available. If such a device is not found, protocols may still run using the CPU, but will be much slower.
+By default, MemBrain protocols assume that a GPU card is available. If such a device is not found, protocols may still run using the CPU with parallel threads, but will be much slower.
 
 References
 ----------
