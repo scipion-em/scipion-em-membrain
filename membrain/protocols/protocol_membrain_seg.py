@@ -41,6 +41,7 @@ from pyworkflow.protocol import GPU_LIST
 
 OUTPUT_TOMOMASK_NAME = 'tomoMasks'
 OUTPUT_TOMOPROBMAP_NAME = 'tomoProbMaps'
+OUTPUT_DIR = 'extra/'
 
 class ProtMemBrainSeg(EMProtocol):
     '''
@@ -136,7 +137,7 @@ class ProtMemBrainSeg(EMProtocol):
         args = ' segment '
         args += ' --ckpt-path ' + Plugin.getMemBrainSegModelPath()
         args += ' --tomogram-path ' + tomoFile
-        args += ' --out-folder ' + self.getWorkingDir() + '/predictions/'
+        args += ' --out-folder ' + self.getWorkingDir() + '/' + OUTPUT_DIR + '/'
         args += ' --segmentation-threshold ' + str(self.segmentationThreshold)
         args += ' --sliding-window-size ' + str(self.slidingWindowSize)
 
@@ -156,17 +157,15 @@ class ProtMemBrainSeg(EMProtocol):
 
         self.runJob(Plugin.getMemBrainSegCmd(), args)
 
-        # By default predictions are stored in the predictions/ folder in the current working dir:
-        # OutputFile = getLastFile(self.getWorkingDir() + '/predictions/' + tomoBaseName + '*.mrc')
         modelBaseName = os.path.basename(Plugin.getMemBrainSegModelPath())
-        OutputFile = self.getWorkingDir() + '/predictions/' + tomoBaseName + '_' + modelBaseName + '_segmented.mrc'
-        NewOutputFile = self.getWorkingDir() + '/predictions/' + tomoBaseName + '_segmented.mrc'
+        OutputFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + tomoBaseName + '_' + modelBaseName + '_segmented.mrc'
+        NewOutputFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + tomoBaseName + '_segmented.mrc'
         moveFile( OutputFile, NewOutputFile )
         # print(OutputFile)
         self.tomoMaskList.append( NewOutputFile )
 
         if self.storeProbabilities:
-            OutputProbFile = self.getWorkingDir() + '/predictions/' + tomoBaseName + '_scores.mrc'
+            OutputProbFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + tomoBaseName + '_scores.mrc'
             self.tomoProbMapList.append( OutputProbFile )
             print(self.tomoProbMapList)
 
