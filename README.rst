@@ -26,12 +26,12 @@ Configuration variables
 .......................
 
 There are some variables related to the MemBrain installation. For example, if you have installed
-MemBrain-seg outside of Scipion, you may define `MEMBRAIN_SEG_ENV_ACTIVATION` for specifying
+MemBrain-seg outside of Scipion, you may define ``MEMBRAIN_SEG_ENV_ACTIVATION`` for specifying
 how to activate the environment.
 
 .. code-block::
 
-    MEMBRAIN_SEG_ENV_ACTIVATION = conda activate membrain-seg
+    MEMBRAIN_SEG_ENV_ACTIVATION="conda activate membrain-seg"
 
 If this variable is not defined, a default value will be provided that will work with the
 latest version installed.
@@ -40,7 +40,7 @@ Likewise, you can use an environment variable to point to a MemBrain-seg model d
 
 .. code-block::
 
-    MEMBRAIN_SEG_MODEL = /path/to/membrain-seg/model.ckpt
+    MEMBRAIN_SEG_MODEL="/path/to/membrain-seg/model.ckpt"
 
 Protocols
 ---------
@@ -54,7 +54,7 @@ By default, MemBrain protocols assume that a GPU card is available. If such a de
 
 References
 ----------
-* Lamm, Lorenz, Ricardo D. Righetto, Wojciech Wietrzynski, Matthias Pöge, Antonio Martinez-Sanchez, Tingying Peng, and Benjamin D. Engel. "MemBrain: A deep learning-aided pipeline for detection of membrane proteins in Cryo-electron tomograms." *Computer methods and programs in biomedicine* 224 (2022): 106990.
+* Lamm, Lorenz, Ricardo D. Righetto, Wojciech Wietrzynski, Matthias Pöge, Antonio Martinez-Sanchez, Tingying Peng, and Benjamin D. Engel. "MemBrain: A deep learning-aided pipeline for detection of membrane proteins in Cryo-electron tomograms." *Computer methods and programs in biomedicine* 224 (2022): 106990. https://doi.org/10.1016/j.cmpb.2022.106990
 
 Contact information
 -------------------
