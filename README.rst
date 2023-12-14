@@ -54,7 +54,7 @@ By default, MemBrain protocols assume that a GPU card is available. If such a de
 
 References
 ----------
-* Lamm, Lorenz, Ricardo D. Righetto, Wojciech Wietrzynski, Matthias Pöge, Antonio Martinez-Sanchez, Tingying Peng, and Benjamin D. Engel. "MemBrain: A deep learning-aided pipeline for detection of membrane proteins in Cryo-electron tomograms." *Computer methods and programs in biomedicine* 224 (2022): 106990.
+* Lamm, Lorenz, Ricardo D. Righetto, Wojciech Wietrzynski, Matthias Pöge, Antonio Martinez-Sanchez, Tingying Peng, and Benjamin D. Engel. "MemBrain: A deep learning-aided pipeline for detection of membrane proteins in Cryo-electron tomograms." *Computer methods and programs in biomedicine* 224 (2022): 106990. https://doi.org/10.1016/j.cmpb.2022.106990
 
 Contact information
 -------------------
