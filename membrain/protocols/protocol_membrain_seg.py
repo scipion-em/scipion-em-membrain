@@ -124,11 +124,9 @@ class ProtMemBrainSeg(EMProtocol):
 
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
-        print(self.gpuList.get())
-        print(type(self.gpuList.get()))
 
         # Scipion's built-in GPU per-thread assignment seems broken so we need to do this:
-        gpus = self.getGoodGpuList(self.gpuList.get())
+        gpus = Plugin.getGoodGpuList(self.gpuList.get())
         n_gpus = len(gpus)
 
         deps = []
@@ -183,7 +181,6 @@ class ProtMemBrainSeg(EMProtocol):
             OutputProbFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + \
                 tomoBaseName + '_scores.mrc'
             self.tomoProbMapList.append(OutputProbFile)
-            print(self.tomoProbMapList)
 
     # Output stuff is the same as in TomoSegMemTV protocol:
     def createOutputStep(self):
@@ -192,7 +189,6 @@ class ProtMemBrainSeg(EMProtocol):
         self._defineOutputs(**{OUTPUT_TOMOMASK_NAME: labelledSet})
         self._defineSourceRelation(self.inTomograms.get(), labelledSet)
 
-        # print('Here it is: ', self.tomoProbMapList)
         if self.tomoProbMapList:
             # We do the same thing again for the probability maps, if they exist:
             labelledSet = self._genOutputSetOfTomoMasks(
@@ -216,25 +212,6 @@ class ProtMemBrainSeg(EMProtocol):
             counter += 1
 
         return tomoMaskSet
-
-    def getGoodGpuList(self, GPU_LIST):
-        # GPU_LIST can be specified both comma-separated or space-separated.
-        # Users can introduce arbitrary number of blank spaces in between.
-        # So we need to sanitize it:
-
-        good_gpus = []  # Safe GPU list will be stored here as list of strings
-        if ',' in GPU_LIST:
-            for gpu in GPU_LIST.split(','):  # First split by commas
-                # Sanitize any blank  spaces and append
-                good_gpus.append(' '.join(gpu.split()))
-        else:
-            # If not comma separated we start sanitizing extra blank spaces
-            GPU_LIST = ' '.join(GPU_LIST.split())
-            # Then a simple split by blank will do
-            for gpu in GPU_LIST.split(' '):
-                good_gpus.append(gpu)
-
-        return good_gpus
 
     # --------------------------- INFO functions -----------------------------------
     def _validate(self):
