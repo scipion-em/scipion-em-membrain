@@ -134,23 +134,3 @@ class Plugin(pwem.Plugin):
         defineMemBrainSegInstallation(MB_SEG_VERSION)
 
         getModelInstallation(MODEL_VERSION)
-
-    @staticmethod
-    def getGoodGpuList(GPU_LIST):
-        # GPU_LIST can be specified both comma-separated or space-separated.
-        # Users can introduce arbitrary number of blank spaces in between.
-        # So we need to sanitize it:
-
-        good_gpus = []  # Safe GPU list will be stored here as list of strings
-        if ',' in GPU_LIST:
-            for gpu in GPU_LIST.split(','):  # First split by commas
-                # Sanitize any blank  spaces and append
-                good_gpus.append(' '.join(gpu.split()))
-        else:
-            # If not comma separated we start sanitizing extra blank spaces
-            GPU_LIST = ' '.join(GPU_LIST.split())
-            # Then a simple split by blank will do
-            for gpu in GPU_LIST.split(' '):
-                good_gpus.append(gpu)
-
-        return good_gpus
