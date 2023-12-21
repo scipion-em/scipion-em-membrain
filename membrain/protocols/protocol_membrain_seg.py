@@ -43,6 +43,7 @@ OUTPUT_TOMOMASK_NAME = 'tomoMasks'
 OUTPUT_TOMOPROBMAP_NAME = 'tomoProbMaps'
 OUTPUT_DIR = 'extra/'
 
+
 class ProtMemBrainSeg(EMProtocol):
     '''
     Segment membranes in tomograms using MemBrain-seg.
@@ -52,16 +53,17 @@ class ProtMemBrainSeg(EMProtocol):
     '''
 
     _label = 'tomogram membrane segmentation'
-    _possibleOutputs = { OUTPUT_TOMOMASK_NAME : SetOfTomoMasks, OUTPUT_TOMOPROBMAP_NAME : SetOfTomoMasks }
+    _possibleOutputs = {OUTPUT_TOMOMASK_NAME: SetOfTomoMasks,
+                        OUTPUT_TOMOPROBMAP_NAME: SetOfTomoMasks}
     _devStatus = BETA
-    
+
     tomoMaskList = []
     tomoProbMapList = []
 
-    # def __init__(self, **args):
-    #     EMProtocol.__init__(self, **args)
-    #     self.stepsExecutionMode = STEPS_PARALLEL
-    
+    def __init__(self, **args):
+        EMProtocol.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
+
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         ''' Define the input parameters that will be used.
@@ -80,58 +82,68 @@ class ProtMemBrainSeg(EMProtocol):
                       label='Input tomograms')
 
         form.addParam('segmentationThreshold', FloatParam,
-                default=0.0,
-                expertLevel=LEVEL_ADVANCED,
-                label='Threshold for segmentation',
-                help='Threshold for the membrane segmentation. Only voxels with a membrane score higher than this threshold will be segmented.')
+                      default=0.0,
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Threshold for segmentation',
+                      help='Threshold for the membrane segmentation. Only voxels with a membrane score higher than this threshold will be segmented.')
 
         form.addParam('slidingWindowSize', IntParam,
-                default=160,
-                expertLevel=LEVEL_ADVANCED,
-                label='Sliding window size',
-                help='Sliding window size used for inference. Smaller values than 160 consume less GPU, but also lead to worse segmentation results!')
-    
+                      default=160,
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Sliding window size',
+                      help='Sliding window size used for inference. Smaller values than 160 consume less GPU, but also lead to worse segmentation results!')
+
         form.addSection(label='Connected components analysis')
         form.addParam('storeConnectedComponents', BooleanParam,
-                    default=False,
-                    label='Label connected components?',
-                    help='Segmentation will be stored as labelled connected components (automatic annotation).')
+                      default=False,
+                      label='Label connected components?',
+                      help='Segmentation will be stored as labelled connected components (automatic annotation).')
 
         form.addParam('connectedComponentsThreshold', IntParam,
-                default=-1,
-                label='Threshold for connected components',
-                help='Components smaller than this size (in voxels) will be removed from the segmentation. A negative value disables this parameter.')
+                      default=-1,
+                      label='Threshold for connected components',
+                      help='Components smaller than this size (in voxels) will be removed from the segmentation. A negative value disables this parameter.')
 
         form.addSection(label='Test-time augmentation (TTA)')
         form.addParam('testTimeAugmentation', BooleanParam,
-                       default=True,
-                       label='Do test-time augmentation?',
-                       help='Use 8-fold test-time augmentation? This improves segmentation quality, but also increases runtime.')
+                      default=True,
+                      label='Do test-time augmentation?',
+                      help='Use 8-fold test-time augmentation? This improves segmentation quality, but also increases runtime.')
 
         form.addParam('storeProbabilities', BooleanParam,
-                       default=False,
-                       label='Output probability maps?',
-                       help='Stores probability maps obtained from 8-fold test-time augmentation in addition to the segmentations.')
-        
+                      default=False,
+                      label='Output probability maps?',
+                      help='Stores probability maps obtained from 8-fold test-time augmentation in addition to the segmentations.')
+
         form.addHidden(GPU_LIST, StringParam, default='0',
                        expertLevel=LEVEL_ADVANCED,
                        label='Choose GPU IDs',
                        help='GPU device to be used. If no GPU is found, MemBrain-seg will run on CPU using the number of threads specified (much slower)')
 
-        form.addParallelSection(threads=1, mpi=1)
+        form.addParallelSection(threads=1, mpi=0)
 
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
+        print(self.gpuList.get())
+        print(type(self.gpuList.get()))
 
-        for tomo in self.inTomograms.get():
-            self._insertFunctionStep(self.runMemBrainSeg, tomo.getFileName())
+        # Scipion's built-in GPU per-thread assignment seems broken so we need to do this:
+        gpus = self.getGoodGpuList(self.gpuList.get())
+        n_gpus = len(gpus)
 
-        self._insertFunctionStep(self.createOutputStep)
+        deps = []
+        for i, tomo in enumerate(self.inTomograms.get()):
+            gpu_idx = i % n_gpus
+            deps.append(self._insertFunctionStep(self.runMemBrainSeg,
+                        tomo.getFileName(), gpus[gpu_idx], prerequisites=[]))
 
-    def runMemBrainSeg(self, tomoFile):
+        self._insertFunctionStep(self.createOutputStep, prerequisites=deps)
+
+    def runMemBrainSeg(self, tomoFile: str, gpuID: str):
+
+        gpuAssignment = "CUDA_VISIBLE_DEVICES=" + gpuID + "; "
 
         tomoBaseName = removeBaseExt(tomoFile)
-        tomoExt = getExt(tomoFile)
 
         # Arguments to the membrain command defined in the plugin initialization:
         args = ' segment '
@@ -151,39 +163,46 @@ class ProtMemBrainSeg(EMProtocol):
 
         if self.storeConnectedComponents:
             args += ' --store-connected-components '
-        
-        if self.connectedComponentsThreshold > 0:
-            args += ' --connected-component-thres ' + str(self.connectedComponentsThreshold)
 
-        self.runJob(Plugin.getMemBrainSegCmd(), args)
+        if self.connectedComponentsThreshold > 0:
+            args += ' --connected-component-thres ' + \
+                str(self.connectedComponentsThreshold)
+
+        self.runJob(gpuAssignment + Plugin.getMemBrainSegCmd(), args)
 
         modelBaseName = os.path.basename(Plugin.getMemBrainSegModelPath())
-        OutputFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + tomoBaseName + '_' + modelBaseName + '_segmented.mrc'
-        NewOutputFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + tomoBaseName + '_segmented.mrc'
-        moveFile( OutputFile, NewOutputFile )
-        # print(OutputFile)
-        self.tomoMaskList.append( NewOutputFile )
+        OutputFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + tomoBaseName + \
+            '_' + modelBaseName + '_segmented.mrc'
+        NewOutputFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + \
+            tomoBaseName + '_segmented.mrc'
+        moveFile(OutputFile, NewOutputFile)
+
+        self.tomoMaskList.append(NewOutputFile)
 
         if self.storeProbabilities:
-            OutputProbFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + tomoBaseName + '_scores.mrc'
-            self.tomoProbMapList.append( OutputProbFile )
+            OutputProbFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + \
+                tomoBaseName + '_scores.mrc'
+            self.tomoProbMapList.append(OutputProbFile)
             print(self.tomoProbMapList)
 
     # Output stuff is the same as in TomoSegMemTV protocol:
     def createOutputStep(self):
-        labelledSet = self._genOutputSetOfTomoMasks(self.tomoMaskList, 'segmented')
+        labelledSet = self._genOutputSetOfTomoMasks(
+            self.tomoMaskList, 'segmented')
         self._defineOutputs(**{OUTPUT_TOMOMASK_NAME: labelledSet})
         self._defineSourceRelation(self.inTomograms.get(), labelledSet)
 
         # print('Here it is: ', self.tomoProbMapList)
         if self.tomoProbMapList:
             # We do the same thing again for the probability maps, if they exist:
-            labelledSet = self._genOutputSetOfTomoMasks(self.tomoProbMapList, 'probability map')
+            labelledSet = self._genOutputSetOfTomoMasks(
+                self.tomoProbMapList, 'probability map')
             self._defineOutputs(**{OUTPUT_TOMOPROBMAP_NAME: labelledSet})
             self._defineSourceRelation(self.inTomograms.get(), labelledSet)
 
     def _genOutputSetOfTomoMasks(self, tomoMaskList, suffix):
-        tomoMaskSet = SetOfTomoMasks.create(self._getPath(), template='tomomasks%s.sqlite', suffix=suffix)
+        tomoMaskSet = SetOfTomoMasks.create(
+            self._getPath(), template='tomomasks%s.sqlite', suffix=suffix)
         inTomoSet = self.inTomograms.get()
         tomoMaskSet.copyInfo(inTomoSet)
         counter = 1
@@ -197,20 +216,37 @@ class ProtMemBrainSeg(EMProtocol):
             counter += 1
 
         return tomoMaskSet
-    
+
+    def getGoodGpuList(self, GPU_LIST):
+        # GPU_LIST can be specified both comma-separated or space-separated.
+        # Users can introduce arbitrary number of blank spaces in between.
+        # So we need to sanitize it:
+
+        good_gpus = []  # Safe GPU list will be stored here as list of strings
+        if ',' in GPU_LIST:
+            for gpu in GPU_LIST.split(','):  # First split by commas
+                # Sanitize any blank  spaces and append
+                good_gpus.append(' '.join(gpu.split()))
+        else:
+            # If not comma separated we start sanitizing extra blank spaces
+            GPU_LIST = ' '.join(GPU_LIST.split())
+            # Then a simple split by blank will do
+            for gpu in GPU_LIST.split(' '):
+                good_gpus.append(gpu)
+
+        return good_gpus
+
     # --------------------------- INFO functions -----------------------------------
     def _validate(self):
         errors = []
-        gpus = self.getGpuList()
-
-        if len(gpus) > 1:
-            errors.append('Only one GPU can be used.')
 
         if not self.testTimeAugmentation and self.storeProbabilities:
-            errors.append('Test-time augmentation must be enabled in order to store probability maps.')
+            errors.append(
+                'Test-time augmentation must be enabled in order to store probability maps.')
 
         if self.connectedComponentsThreshold == 0:
-            errors.append('Connected components threshold threshold must be greater than zero, or negative to disable this option.')
+            errors.append(
+                'Connected components threshold threshold must be greater than zero, or negative to disable this option.')
 
         return errors
 
@@ -219,27 +255,32 @@ class ProtMemBrainSeg(EMProtocol):
         cites = ['lamm_membrain_2022']
 
         return cites
-    
+
     def _summary(self):
         summary = []
         nTomos = self.inTomograms.get().getSize()
         summary.append('%d tomograms segmented using MemBrain-seg.' % nTomos)
 
-        summary.append('A sliding window of size %d was used for prediction.' % self.slidingWindowSize)
+        summary.append(
+            'A sliding window of size %d was used for prediction.' % self.slidingWindowSize)
 
         if self.testTimeAugmentation:
-            summary.append('8-fold test-time augmentation was used in each prediction.')
+            summary.append(
+                '8-fold test-time augmentation was used in each prediction.')
         else:
-            summary.append('Test-time augmentation was not used in prediction.')
+            summary.append(
+                'Test-time augmentation was not used in prediction.')
 
         if self.storeProbabilities:
-            summary.append('Score maps based on test-time augmentation were saved in addition to segmentations.')
-        
+            summary.append(
+                'Score maps based on test-time augmentation were saved in addition to segmentations.')
+
         if self.storeConnectedComponents:
-            summary.append('Segmentations were stored as labelled connected components.')
-        
+            summary.append(
+                'Segmentations were stored as labelled connected components.')
+
         if self.connectedComponentsThreshold > 0:
-            summary.append('The threshold size for connected components was %d.' % self.connectedComponentsThreshold )
+            summary.append('The threshold size for connected components was %d.' %
+                           self.connectedComponentsThreshold)
 
         return summary
-    

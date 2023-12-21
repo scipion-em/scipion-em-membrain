@@ -55,7 +55,7 @@ GDRIVE_FILEID = '1tSQIz_UCsQZNfyHg0RxD-4meFgolszo8'
 class Plugin(pwem.Plugin):
 
     _url = 'https://github.com/scipion-em/scipion-em-membrain'
-    
+
     @classmethod
     def _defineVariables(cls):
         """ Defines variables for this plugin. scipion3 config -p membrain will show them with current values"""
@@ -86,7 +86,7 @@ class Plugin(pwem.Plugin):
             model += "/" + MODEL_PKG_NAME + "-" + MODEL_VERSION
             model += "/" + MEMBRAIN_SEG_MODEL
         return model
-    
+
     @classmethod
     def defineBinaries(cls, env):
 
@@ -121,7 +121,8 @@ class Plugin(pwem.Plugin):
 
             # wget download line obtained from: https://stackoverflow.com/a/39087286
             modelInstallationCmd = 'curl -L -o ' + MEMBRAIN_SEG_MODEL + \
-                ' "https://drive.google.com/uc?export=download&id=' + GDRIVE_FILEID + '&confirm=yes" && '
+                ' "https://drive.google.com/uc?export=download&id=' + \
+                GDRIVE_FILEID + '&confirm=yes" && '
             modelInstallationCmd += 'touch model-downloaded.txt'
 
             env.addPackage(MODEL_PKG_NAME, version=model_version,
