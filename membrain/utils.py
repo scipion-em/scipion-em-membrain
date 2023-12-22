@@ -29,21 +29,21 @@ Utilities for MemBrain protocols
 '''
 
 
-def getGoodGpuList(GPU_LIST):
-    # GPU_LIST can be specified both comma-separated or space-separated.
+def getGoodGpuList(gpu_list):
+    # gpu_list can be specified both comma-separated or space-separated.
     # Users can introduce arbitrary number of blank spaces in between.
     # So we need to sanitize it:
 
     good_gpus = []  # Safe GPU list will be stored here as list of strings
-    if ',' in GPU_LIST:
-        for gpu in GPU_LIST.split(','):  # First split by commas
+    if ',' in gpu_list:
+        for gpu in gpu_list.split(','):  # First split by commas
             # Sanitize any blank  spaces and append
             good_gpus.append(' '.join(gpu.split()))
     else:
         # If not comma separated we start sanitizing extra blank spaces
-        GPU_LIST = ' '.join(GPU_LIST.split())
+        gpu_list = ' '.join(gpu_list.split())
         # Then a simple split by blank will do
-        for gpu in GPU_LIST.split(' '):
+        for gpu in gpu_list.split(' '):
             good_gpus.append(gpu)
 
     return good_gpus
