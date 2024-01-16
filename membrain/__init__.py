@@ -94,7 +94,7 @@ class Plugin(pwem.Plugin):
 
             installationCmd = cls.getCondaActivationCmd()
             installationCmd += ' conda create -y --name ' + \
-                cls.getVar(MEMBRAIN_SEG_ENV_VAR) + ' python=3.9 && '
+                cls.getVar(MEMBRAIN_SEG_ENV_VAR) + ' -c conda-forge python=3.9 && '
             installationCmd += cls.getMemBrainSegActivation() + ' && '
             installationCmd += 'cd membrain-seg && '
             installationCmd += 'pip install . && '
