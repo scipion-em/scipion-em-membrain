@@ -98,6 +98,7 @@ class Plugin(pwem.Plugin):
             installationCmd += cls.getMemBrainSegActivation() + ' && '
             installationCmd += 'cd membrain-seg && '
             installationCmd += 'pip install . && '
+            installationCmd += 'pip install gdown && ' # We install gdown just to have a more stable way of downloading from Google Drive
             installationCmd += 'touch ../env-created.txt'
 
             return installationCmd
@@ -119,11 +120,17 @@ class Plugin(pwem.Plugin):
 
         def getModelInstallation(model_version):
 
+            ## THIS DOES NOT WORK AS OF 16.01.2024:
             # wget download line obtained from: https://stackoverflow.com/a/39087286
-            modelInstallationCmd = 'curl -L -o ' + MEMBRAIN_SEG_MODEL + \
-                ' "https://drive.google.com/uc?export=download&id=' + \
-                GDRIVE_FILEID + '&confirm=yes" && '
-            modelInstallationCmd += 'touch model-downloaded.txt'
+            # modelInstallationCmd = 'curl -L -o ' + MEMBRAIN_SEG_MODEL + \
+            #     ' "https://drive.google.com/uc?export=download&id=' + \
+            #     GDRIVE_FILEID + '&confirm=yes" && '
+
+            ## So we have to go with this:
+            modelInstallationCmd = cls.getCondaActivationCmd()
+            modelInstallationCmd += cls.getMemBrainSegActivation()
+            modelInstallationCmd += ' && gdown -O ' + MEMBRAIN_SEG_MODEL + ' ' + GDRIVE_FILEID
+            modelInstallationCmd += ' && touch model-downloaded.txt'
 
             env.addPackage(MODEL_PKG_NAME, version=model_version,
                            commands=[
