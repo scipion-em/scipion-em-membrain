@@ -34,7 +34,7 @@ from scipion.install.funcs import VOID_TGZ
 
 _logo = "icon.png"
 _references = ['lamm_membrain_2022']
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 MB_SEG_VERSION = 'git'
 
