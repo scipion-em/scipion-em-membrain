@@ -231,7 +231,7 @@ class ProtMemBrainSeg(EMProtocol):
 
     def _citations(self):
 
-        cites = ['lamm_membrain_2022']
+        cites = ['lamm_membrain_2024']
 
         return cites
 

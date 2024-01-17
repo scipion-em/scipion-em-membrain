@@ -53,5 +53,23 @@ MemBrain is a powerful and annotation-efficient tool for the detection of membra
 	file = {Lamm et al. - 2022 - MemBrain A deep learning-aided pipeline for detec.pdf:C\:\\Users\\diogori\\Zotero\\storage\\IW6YQWG4\\Lamm et al. - 2022 - MemBrain A deep learning-aided pipeline for detec.pdf:application/pdf},
 }
 
+@misc{lamm_membrain_2024,
+	title = {{MemBrain} v2: an end-to-end tool for the analysis of membranes in cryo-electron tomography},
+	copyright = {© 2024, Posted by Cold Spring Harbor Laboratory. This pre-print is available under a Creative Commons License (Attribution 4.0 International), CC BY 4.0, as described at http://creativecommons.org/licenses/by/4.0/},
+	shorttitle = {{MemBrain} v2},
+	url = {https://www.biorxiv.org/content/10.1101/2024.01.05.574336v1},
+	doi = {10.1101/2024.01.05.574336},
+	abstract = {MemBrain v2 is a deep learning-enabled program aimed at the efficient analysis of membranes in cryo-electron tomography (cryo-ET). The final v2 release of MemBrain will comprise three main modules: 1) MemBrain-seg, which provides automated membrane segmentation, 2) MemBrain-pick, which provides automated picking of particles along segmented membranes, and 3) MemBrain-stats, which provides quantitative statistics of particle distributions and membrane morphometrics. This initial version of the manuscript is focused on the beta release of MemBrain-seg, which combines iterative training with diverse data and specialized Fourier-based data augmentations. These augmentations are specifically designed to enhance the tool's adaptability to a variety of tomographic data and address common challenges in cryo-ET analysis. A key feature of MemBrain-seg is the implementation of the Surface-Dice loss function, which improves the network's focus on membrane connectivity and allows for the effective incorporation of manual annotations from different sources. This function is beneficial in handling the variability inherent in membrane structures and annotations. Our ongoing collaboration with the cryo-ET community plays an important role in continually improving MemBrain v2 with a wide array of training data. This collaborative approach ensures that MemBrain v2 remains attuned to the field's needs, enhancing its robustness and generalizability across different types of tomographic data. The current version of MemBrain-seg is available at https://github.com/teamtomo/membrain-seg, and the predecessor of MemBrain-pick (also called MemBrain v1) is deposited at https://github.com/CellArchLab/MemBrain. This preprint will be updated concomitantly with the code until the three integrated modules of MemBrain v2 are complete.},
+	language = {en},
+	urldate = {2024-01-08},
+	publisher = {bioRxiv},
+	author = {Lamm, Lorenz and Zufferey, Simon and Righetto, Ricardo D. and Wietrzynski, Wojciech and Yamauchi, Kevin A. and Burt, Alister and Liu, Ye and Zhang, Hanyi and Martinez-Sanchez, Antonio and Ziegler, Sebastian and Isensee, Fabian and Schnabel, Julia A. and Engel, Benjamin D. and Peng, Tingying},
+	month = jan,
+	year = {2024},
+	note = {Pages: 2024.01.05.574336
+Section: New Results},
+	keywords = {Favorites},
+	file = {Full Text PDF:C\:\\Users\\diogori\\Zotero\\storage\\J9Y48BK5\\Lamm et al. - 2024 - MemBrain v2 an end-to-end tool for the analysis o.pdf:application/pdf},
+}
 
 """
