@@ -39,11 +39,11 @@ If you need to do something more ellaborate for activating the correct environme
 
     MEMBRAIN_SEG_ENV_ACTIVATION = conda activate membrain-seg-scipion
 
-Finally, you can use a configuration variable to point to a MemBrain-seg model downloaded externally:
+Finally, you can use ``MEMBRAIN_SEG_MODEL`` to indicate a MemBrain-seg model downloaded externally:
 
 .. code-block::
 
-    MEMBRAIN_SEG_MODEL="/path/to/membrain-seg/model.ckpt"
+    MEMBRAIN_SEG_MODEL = /path/to/membrain-seg/model.ckpt
 
 If these variables are not defined, default values will be used that will work with the
 latest version installed through Scipion.
