@@ -23,34 +23,18 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-import os.path
-from datetime import datetime as dt
 
 import pwem
+from datetime import datetime as dt
 from scipion.install.funcs import VOID_TGZ
+from membrain.constants import *
 
 # # Environment variables are imported from here:
 # from .constants import *
 
 _logo = "icon.png"
 _references = ['lamm_membrain_2022', 'lamm_membrain_2024']
-__version__ = "0.1.1"
-
-MB_SEG_VERSION = 'git'
-
-# Use this variable to activate an environment from the Scipion conda
-MEMBRAIN_SEG_ENV_VAR = "MEMBRAIN_SEG_ENV"
-DEFAULT_MEMBRAIN_SEG_ENV = "membrain-seg"
-# Use this general activation variable when installed outside Scipion:
-MEMBRAIN_SEG_ENV_ACTIVATION_VAR = "MEMBRAIN_SEG_ENV_ACTIVATION"
-
-# models
-MODEL_VERSION = '10'
-MODEL_PKG_NAME = 'membrain-seg-models'
-MEMBRAIN_SEG_MODEL_VAR = 'MEMBRAIN_SEG_MODEL'
-MEMBRAIN_SEG_MODEL = 'MemBrain_seg_v10_alpha.ckpt'
-GDRIVE_FILEID = '1tSQIz_UCsQZNfyHg0RxD-4meFgolszo8'
-
+__version__ = "0.1.2"
 
 class Plugin(pwem.Plugin):
 
@@ -90,30 +74,41 @@ class Plugin(pwem.Plugin):
     @classmethod
     def defineBinaries(cls, env):
 
+        # Install basic conda environment with dependencies:
         def getCondaInstallation(version):
 
             installationCmd = cls.getCondaActivationCmd()
             installationCmd += ' conda create -y --name ' + \
                 cls.getVar(MEMBRAIN_SEG_ENV_VAR) + ' -c conda-forge python=3.9 && '
-            installationCmd += cls.getMemBrainSegActivation() + ' && '
-            installationCmd += 'cd membrain-seg && '
-            installationCmd += 'pip install . && '
-            installationCmd += 'pip install gdown && ' # We install gdown just to have a more stable way of downloading from Google Drive
-            installationCmd += 'touch ../env-created.txt'
+            # installationCmd += cls.getMemBrainSegActivation() + ' && '
+            installationCmd += 'touch env-created'
 
             return installationCmd
 
+        # Install MemBrain-seg itself:
         def defineMemBrainSegInstallation(version):
-            installed = "last-pull-%s.txt" % dt.now().strftime("%y%h%d-%H%M%S")
+
+            MEMBRAIN_SEG_INSTALLED = '%s_%s_installed' % (MEMBRAIN_SEG, MEMBRAIN_SEG_VERSION)
+
+            installationCmd = cls.getCondaActivationCmd()
+            installationCmd += cls.getMemBrainSegActivation() + ' && '
+
+            # Install a dependency for the scipion-em-membrain plugin:  
+            # NOTE: this will change once we are able to fetch the model from Zenodo (coming soon)          
+            installationCmd += 'pip install gdown && ' # We install gdown just to have a more stable way of downloading from Google Drive
+
+            # Install MemBrain-Seg itself:
+            installationCmd += 'pip install %s==%s && ' % (MEMBRAIN_SEG, MEMBRAIN_SEG_VERSION)
+
+            # Flag installation finished
+            installationCmd += 'touch %s' % MEMBRAIN_SEG_INSTALLED
 
             membrain_commands = [
-                ('git clone https://github.com/teamtomo/membrain-seg.git', 'membrain-seg'),
-                ('cd membrain-seg && git pull && touch ../%s' %
-                 installed, installed),
-                (getCondaInstallation(version), 'env-created.txt')
+                (getCondaInstallation(version), 'env-created'),
+                (installationCmd, MEMBRAIN_SEG_INSTALLED)
             ]
 
-            env.addPackage('membrain-seg', version=version,
+            env.addPackage('membrain_seg', version=version,
                            commands=membrain_commands,
                            tar=VOID_TGZ,
                            default=True)
@@ -138,6 +133,6 @@ class Plugin(pwem.Plugin):
                            tar=VOID_TGZ,
                            default=True)
 
-        defineMemBrainSegInstallation(MB_SEG_VERSION)
+        defineMemBrainSegInstallation(MEMBRAIN_SEG_VERSION)
 
         getModelInstallation(MODEL_VERSION)
