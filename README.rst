@@ -26,27 +26,33 @@ Configuration variables
 .......................
 
 There are some variables related to the MemBrain installation. For example, if you have installed
-MemBrain-seg outside of Scipion, you may define ``MEMBRAIN_SEG_ENV_ACTIVATION`` for specifying
-how to activate the environment.
+MemBrain-seg outside of Scipion, you may define ``MEMBRAIN_SEG_ENV`` in your ``scipion.conf`` file for specifying
+an already existing conda environment:
 
 .. code-block::
 
-    MEMBRAIN_SEG_ENV_ACTIVATION="conda activate membrain-seg"
+    MEMBRAIN_SEG_ENV = conda activate membrain-seg-scipion
 
-If this variable is not defined, a default value will be provided that will work with the
-latest version installed.
+If you need to do something more ellaborate for activating the correct environment, you can do so through the ``MEMBRAIN_SEG_ENV_ACTIVATION`` variable:
 
-Likewise, you can use an environment variable to point to a MemBrain-seg model downloaded externally:
+.. code-block::
+
+    MEMBRAIN_SEG_ENV_ACTIVATION = conda activate membrain-seg-scipion
+
+Finally, you can use a configuration variable to point to a MemBrain-seg model downloaded externally:
 
 .. code-block::
 
     MEMBRAIN_SEG_MODEL="/path/to/membrain-seg/model.ckpt"
 
+If these variables are not defined, default values will be used that will work with the
+latest version installed through Scipion.
+
 Protocols
 ---------
 The following protocols are currently implemented:
 
-* Membrane segmentation using MemBrain-seg_
+* Membrane segmentation using the **MemBrain-seg** module
 
 Using GPU or CPU
 ................
@@ -54,7 +60,13 @@ By default, MemBrain protocols assume that a GPU card is available. If such a de
 
 References
 ----------
-* Lamm, Lorenz, Ricardo D. Righetto, Wojciech Wietrzynski, Matthias Pöge, Antonio Martinez-Sanchez, Tingying Peng, and Benjamin D. Engel. "MemBrain: A deep learning-aided pipeline for detection of membrane proteins in Cryo-electron tomograms." *Computer methods and programs in biomedicine* 224 (2022): 106990. https://doi.org/10.1016/j.cmpb.2022.106990
+
+<!-- in JSB citation style: -->
+
+* Lamm, L., Zufferey, S., Righetto, R.D., Wietrzynski, W., Yamauchi, K.A., Burt, A., Liu, Y., Zhang, H., Martinez-Sanchez, A., Ziegler, S., Isensee, F., Schnabel, J.A., Engel, B.D., Peng, T., 2024. MemBrain v2: an end-to-end tool for the analysis of membranes in cryo-electron tomography. https://doi.org/10.1101/2024.01.05.574336 
+
+* Lamm, L., Righetto, R.D., Wietrzynski, W., Pöge, M., Martinez-Sanchez, A., Peng, T., Engel, B.D., 2022. MemBrain: A deep learning-aided pipeline for detection of membrane proteins in Cryo-electron tomograms. Computer Methods and Programs in Biomedicine 224, 106990. https://doi.org/10.1016/j.cmpb.2022.106990
+
 
 Contact information
 -------------------
@@ -66,5 +78,4 @@ We'll be pleased to help.
 *Scipion Team*
 
 .. _issue: https://github.com/scipion-em/scipion-em-membrain/issues
-.. _MemBrain: https://doi.org/10.1016/j.cmpb.2022.106990
-.. _MemBrain-seg: https://github.com/teamtomo/membrain-seg
+.. _MemBrain: https://doi.org/10.1101/2024.01.05.574336
