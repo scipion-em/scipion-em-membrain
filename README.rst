@@ -25,21 +25,13 @@ Scipion will automatically install MemBrain and download any pre-trained models 
 Configuration variables
 .......................
 
-There are some variables related to the MemBrain installation. For example, if you have installed
-MemBrain-seg outside of Scipion, you may define ``MEMBRAIN_SEG_ENV`` in your ``scipion.conf`` file for specifying
-an already existing conda environment:
+There are some variables related to the MemBrain installation. For example, if you have installed MemBrain-seg outside of Scipion, you may define ``MEMBRAIN_SEG_ENV`` in your ``scipion.conf`` file for specifying an already existing conda environment:
 
 .. code-block::
 
     MEMBRAIN_SEG_ENV = conda activate membrain-seg-scipion
 
-If you need to do something more ellaborate for activating the correct environment, you can do so through the ``MEMBRAIN_SEG_ENV_ACTIVATION`` variable:
-
-.. code-block::
-
-    MEMBRAIN_SEG_ENV_ACTIVATION = conda activate membrain-seg-scipion
-
-Finally, you can use ``MEMBRAIN_SEG_MODEL`` to indicate a MemBrain-seg model downloaded externally:
+Also, you can use the ``MEMBRAIN_SEG_MODEL`` environment variable to indicate a MemBrain-seg model downloaded externally:
 
 .. code-block::
 
