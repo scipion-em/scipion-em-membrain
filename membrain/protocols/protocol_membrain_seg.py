@@ -95,6 +95,12 @@ class ProtMemBrainSeg(EMProtocol):
                       label='Sliding window size',
                       help='Sliding window size used for inference. Smaller values than 160 consume less GPU, but also lead to worse segmentation results!')
 
+        form.addParam('additionalArgs', StringParam,
+                      default="",
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Additional options',
+                      help='You can enter additional command line options to MemBrain here.')
+
         form.addSection(label='Connected components analysis')
         form.addParam('storeConnectedComponents', BooleanParam,
                       default=False,
@@ -155,18 +161,21 @@ class ProtMemBrainSeg(EMProtocol):
 
         if self.testTimeAugmentation:
             args += ' --test-time-augmentation'
+
+            if self.storeProbabilities:
+                args += ' --store-probabilities '
+
         else:
             args += ' --no-test-time-augmentation'
-
-        if self.storeProbabilities:
-            args += ' --store-probabilities '
 
         if self.storeConnectedComponents:
             args += ' --store-connected-components '
 
-        if self.connectedComponentsThreshold > 0:
-            args += ' --connected-component-thres ' + \
-                str(self.connectedComponentsThreshold)
+            if self.connectedComponentsThreshold > 0:
+                args += ' --connected-component-thres ' + \
+                    str(self.connectedComponentsThreshold)
+            
+        args += " " + self.additionalArgs.get()
 
         self.runJob(gpuAssignment + Plugin.getMemBrainSegCmd(), args)
 
