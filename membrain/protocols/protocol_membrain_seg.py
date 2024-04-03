@@ -31,7 +31,6 @@ A protocol to segment membranes in tomograms using MemBrain-seg.
 import os
 from enum import Enum
 from membrain import Plugin
-from membrain import utils as mbUtils
 from pwem.protocols import EMProtocol
 from pyworkflow import BETA
 from pyworkflow.protocol import PointerParam, BooleanParam, IntParam, FloatParam, StringParam, LEVEL_ADVANCED
@@ -134,7 +133,8 @@ class ProtMemBrainSeg(EMProtocol):
     def _insertAllSteps(self):
 
         # Scipion's built-in GPU per-thread assignment seems broken so we need to do this:
-        gpus = mbUtils.getGoodGpuList(self.gpuList.get())
+        gpus = getattr(self, GPU_LIST).getListFromValues()
+        print(gpus)
         n_gpus = len(gpus)
 
         deps = []
@@ -145,9 +145,9 @@ class ProtMemBrainSeg(EMProtocol):
 
         self._insertFunctionStep(self.createOutputStep, prerequisites=deps)
 
-    def runMemBrainSeg(self, tomoFile: str, gpuID: str):
+    def runMemBrainSeg(self, tomoFile: str, gpuID: int):
 
-        gpuAssignment = "CUDA_VISIBLE_DEVICES=" + gpuID + "; "
+        gpuAssignment = "CUDA_VISIBLE_DEVICES=" + str(gpuID) + "; "
 
         tomoBaseName = removeBaseExt(tomoFile)
 
