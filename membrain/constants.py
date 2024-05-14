@@ -24,6 +24,8 @@
 # *
 # **************************************************************************
 
+import pwem
+
 MEMBRAIN_SEG = 'membrain-seg'
 MEMBRAIN_SEG_VERSION = '0.0.1'
 
@@ -38,4 +40,7 @@ MODEL_VERSION = '10'
 MODEL_PKG_NAME = 'membrain_seg_models'
 MEMBRAIN_SEG_MODEL_VAR = 'MEMBRAIN_SEG_MODEL'
 MEMBRAIN_SEG_MODEL = 'MemBrain_seg_v10_alpha.ckpt'
+DEFAULT_MEMBRAIN_SEG_MODEL = pwem.Config.EM_ROOT
+DEFAULT_MEMBRAIN_SEG_MODEL += "/" + MODEL_PKG_NAME + "-" + MODEL_VERSION
+DEFAULT_MEMBRAIN_SEG_MODEL += "/" + MEMBRAIN_SEG_MODEL
 GDRIVE_FILEID = '1tSQIz_UCsQZNfyHg0RxD-4meFgolszo8'
