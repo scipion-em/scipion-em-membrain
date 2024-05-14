@@ -53,11 +53,9 @@ class Plugin(pwem.Plugin):
     @classmethod
     def getMemBrainSegCmd(cls):
         """ Return the full command to run a MemBrain program. """
-        cmd = cls.getVar(MEMBRAIN_SEG_ENV_ACTIVATION_VAR)
-        if not cmd:
-            cmd = cls.getCondaActivationCmd() + " "
-            cmd += cls.getMemBrainSegActivation()
-            cmd += " && membrain "
+        cmd = cls.getCondaActivationCmd() + " "
+        cmd += cls.getMemBrainSegActivation()
+        cmd += " && membrain "
         return cmd
 
     @classmethod
