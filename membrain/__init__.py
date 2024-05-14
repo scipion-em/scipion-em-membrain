@@ -43,12 +43,12 @@ class Plugin(pwem.Plugin):
     @classmethod
     def _defineVariables(cls):
         """ Defines variables for this plugin. scipion3 config -p membrain will show them with current values"""
-        cls._defineVar(MEMBRAIN_SEG_ENV_VAR, DEFAULT_MEMBRAIN_SEG_ENV)
+        cls._defineVar(MEMBRAIN_SEG_ENV_ACTIVATION_VAR, DEFAULT_MEMBRAIN_SEG_ENV_ACTIVATION)
         cls._defineVar(MEMBRAIN_SEG_MODEL_VAR, DEFAULT_MEMBRAIN_SEG_MODEL)
 
     @classmethod
     def getMemBrainSegActivation(cls):
-        return "conda activate " + cls.getVar(MEMBRAIN_SEG_ENV_VAR)
+        return cls.getVar(MEMBRAIN_SEG_ENV_ACTIVATION_VAR)
 
     @classmethod
     def getMemBrainSegCmd(cls):

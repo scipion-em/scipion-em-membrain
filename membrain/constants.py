@@ -30,8 +30,9 @@ MEMBRAIN_SEG = 'membrain-seg'
 MEMBRAIN_SEG_VERSION = '0.0.1'
 
 # Use this variable to activate an environment from the Scipion conda
-MEMBRAIN_SEG_ENV_VAR = "MEMBRAIN_SEG_ENV"
 DEFAULT_MEMBRAIN_SEG_ENV = "membrain-seg-scipion"
+MEMBRAIN_SEG_ENV_ACTIVATION_VAR = "MEMBRAIN_SEG_ENV_ACTIVATION"
+DEFAULT_MEMBRAIN_SEG_ENV_ACTIVATION = "conda activate " + DEFAULT_MEMBRAIN_SEG_ENV
 
 # models
 MODEL_VERSION = '10'
