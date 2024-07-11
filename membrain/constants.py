@@ -27,7 +27,7 @@
 import pwem
 
 MEMBRAIN_SEG = 'membrain-seg'
-MEMBRAIN_SEG_VERSION = '0.0.1'
+MEMBRAIN_SEG_VERSION = '0.0.3'
 
 # Use this variable to activate an environment from the Scipion conda
 MEMBRAIN_SEG_ENV_VAR = "MEMBRAIN_SEG_ENV"
