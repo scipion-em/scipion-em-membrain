@@ -89,7 +89,7 @@ class Plugin(pwem.Plugin):
 
             MEMBRAIN_SEG_INSTALLED = '%s_%s_installed' % (MEMBRAIN_SEG, MEMBRAIN_SEG_VERSION)
 
-            installationCmd = cls.getCondaActivationCmd()
+            installationCmd = cls.getCondaActivationCmd() + " "
             installationCmd += cls.getMemBrainSegActivation() + ' && '
 
             # Install a dependency for the scipion-em-membrain plugin:  
@@ -121,7 +121,7 @@ class Plugin(pwem.Plugin):
             #     GDRIVE_FILEID + '&confirm=yes" && '
 
             ## So we have to go with this:
-            modelInstallationCmd = cls.getCondaActivationCmd()
+            modelInstallationCmd = cls.getCondaActivationCmd() + " "
             modelInstallationCmd += cls.getMemBrainSegActivation()
             modelInstallationCmd += ' && gdown -O ' + MEMBRAIN_SEG_MODEL + ' ' + GDRIVE_FILEID
             modelInstallationCmd += ' && touch model-downloaded.txt'
