@@ -60,10 +60,8 @@ class ProtMemBrainSeg(EMProtocol):
 
     tomoMaskList = []
     tomoProbMapList = []
-
-    def __init__(self, **args):
-        EMProtocol.__init__(self, **args)
-        self.stepsExecutionMode = STEPS_PARALLEL
+    
+    stepsExecutionMode = STEPS_PARALLEL
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -135,9 +133,9 @@ class ProtMemBrainSeg(EMProtocol):
         deps = []
         for tomo in self.inTomograms.get():
             deps.append(self._insertFunctionStep(self.runMemBrainSeg,
-                        tomo.getFileName(), prerequisites=[]))
+                        tomo.getFileName(), prerequisites=[], needsGPU=True))
 
-        self._insertFunctionStep(self.createOutputStep, prerequisites=deps)
+        self._insertFunctionStep(self.createOutputStep, prerequisites=deps, needsGPU=False)
 
     def runMemBrainSeg(self, tomoFile: str):
         tomoBaseName = removeBaseExt(tomoFile)
