@@ -132,23 +132,14 @@ class ProtMemBrainSeg(EMProtocol):
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
 
-        # Scipion's built-in GPU per-thread assignment seems broken so we need to do this:
-        gpus = getattr(self, GPU_LIST).getListFromValues()
-        print(gpus)
-        n_gpus = len(gpus)
-
         deps = []
-        for i, tomo in enumerate(self.inTomograms.get()):
-            gpu_idx = i % n_gpus
+        for tomo in self.inTomograms.get():
             deps.append(self._insertFunctionStep(self.runMemBrainSeg,
-                        tomo.getFileName(), gpus[gpu_idx], prerequisites=[]))
+                        tomo.getFileName(), prerequisites=[]))
 
         self._insertFunctionStep(self.createOutputStep, prerequisites=deps)
 
-    def runMemBrainSeg(self, tomoFile: str, gpuID: int):
-
-        gpuAssignment = "CUDA_VISIBLE_DEVICES=" + str(gpuID) + "; "
-
+    def runMemBrainSeg(self, tomoFile: str):
         tomoBaseName = removeBaseExt(tomoFile)
 
         # Arguments to the membrain command defined in the plugin initialization:
@@ -177,7 +168,7 @@ class ProtMemBrainSeg(EMProtocol):
             
         args += " " + self.additionalArgs.get()
 
-        self.runJob(gpuAssignment + Plugin.getMemBrainSegCmd(), args)
+        self.runJob(Plugin.getMemBrainSegCmd(), args)
 
         modelBaseName = os.path.basename(Plugin.getMemBrainSegModelPath())
         OutputFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + tomoBaseName + \
