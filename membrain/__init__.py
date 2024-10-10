@@ -56,7 +56,7 @@ class Plugin(pwem.Plugin):
         """ Return the full command to run a MemBrain program. """
         cmd = cls.getCondaActivationCmd() + " "
         cmd += cls.getMemBrainSegActivation()
-        cmd += " && membrain "
+        cmd += " && CUDA_VISIBLE_DEVICES=%(GPU)s membrain "
         return cmd
 
     @classmethod
