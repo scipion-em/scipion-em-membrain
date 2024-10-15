@@ -60,10 +60,7 @@ class ProtMemBrainSeg(EMProtocol):
 
     tomoMaskList = []
     tomoProbMapList = []
-
-    def __init__(self, **args):
-        EMProtocol.__init__(self, **args)
-        self.stepsExecutionMode = STEPS_PARALLEL
+    stepsExecutionMode = STEPS_PARALLEL
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -141,9 +138,9 @@ class ProtMemBrainSeg(EMProtocol):
         for i, tomo in enumerate(self.inTomograms.get()):
             gpu_idx = i % n_gpus
             deps.append(self._insertFunctionStep(self.runMemBrainSeg,
-                        tomo.getFileName(), gpus[gpu_idx], prerequisites=[]))
+                                                 tomo.getFileName(), gpus[gpu_idx], needsGPU=True))
 
-        self._insertFunctionStep(self.createOutputStep, prerequisites=deps)
+        self._insertFunctionStep(self.createOutputStep, prerequisites=deps, needsGPU=False)
 
     def runMemBrainSeg(self, tomoFile: str, gpuID: int):
 
@@ -173,24 +170,24 @@ class ProtMemBrainSeg(EMProtocol):
 
             if self.connectedComponentsThreshold > 0:
                 args += ' --connected-component-thres ' + \
-                    str(self.connectedComponentsThreshold)
-            
+                        str(self.connectedComponentsThreshold)
+
         args += " " + self.additionalArgs.get()
 
         self.runJob(gpuAssignment + Plugin.getMemBrainSegCmd(), args)
 
         modelBaseName = os.path.basename(Plugin.getMemBrainSegModelPath())
         OutputFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + tomoBaseName + \
-            '_' + modelBaseName + '_segmented.mrc'
+                     '_' + modelBaseName + '_segmented.mrc'
         NewOutputFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + \
-            tomoBaseName + '_segmented.mrc'
+                        tomoBaseName + '_segmented.mrc'
         moveFile(OutputFile, NewOutputFile)
 
         self.tomoMaskList.append(NewOutputFile)
 
         if self.storeProbabilities:
             OutputProbFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + \
-                tomoBaseName + '_scores.mrc'
+                             tomoBaseName + '_scores.mrc'
             self.tomoProbMapList.append(OutputProbFile)
 
     # Output stuff is the same as in TomoSegMemTV protocol:
