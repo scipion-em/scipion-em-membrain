@@ -62,8 +62,8 @@ class ProtMemBrainSeg(EMProtocol):
     """
 
     _label = 'tomogram membrane segmentation'
-    _possibleOutputs = {OUTPUT_TOMOMASK_NAME: SetOfTomoMasks,
-                        OUTPUT_TOMOPROBMAP_NAME: SetOfTomoMasks}
+    _possibleOutputs = {OUTPUT_TOMOMASK_NAME: 'SetOfTomoMasks',
+                        OUTPUT_TOMOPROBMAP_NAME: 'SetOfTomoMasks'}
     _devStatus = BETA
     stepsExecutionMode = STEPS_PARALLEL
 
@@ -225,11 +225,12 @@ class ProtMemBrainSeg(EMProtocol):
 
     def _createOutputSet(self, isProbablityMap: bool = False) -> SetOfTomoMasks:
         if isProbablityMap:
-            outTomoMasks = getattr(self, OUTPUT_TOMOPROBMAP_NAME, None)
+            outName = OUTPUT_TOMOPROBMAP_NAME
             suffix = SUFFIX_SCORES
         else:
-            outTomoMasks = getattr(self, OUTPUT_TOMOMASK_NAME, None)
+            outName = OUTPUT_TOMOMASK_NAME
             suffix = SUFFIX_SEG
+        outTomoMasks = getattr(self, outName, None)
         if outTomoMasks:
             outTomoMasks.enableAppend()
         else:
@@ -240,7 +241,7 @@ class ProtMemBrainSeg(EMProtocol):
             outTomoMasks.copyInfo(inTomoSet)
             outTomoMasks.setStreamState(Set.STREAM_OPEN)
 
-            self._defineOutputs(**{OUTPUT_TOMOMASK_NAME: outTomoMasks})
+            self._defineOutputs(**{outName: outTomoMasks})
             self._defineSourceRelation(self._getInTomos(retPointer=True), outTomoMasks)
 
         return outTomoMasks

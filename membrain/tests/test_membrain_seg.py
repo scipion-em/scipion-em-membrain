@@ -23,15 +23,17 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from typing import Tuple
+
 import pyworkflow.tests as pwtests
 from membrain.protocols import ProtMemBrainSeg
+from membrain.protocols.protocol_membrain_seg import OUTPUT_TOMOMASK_NAME, OUTPUT_TOMOPROBMAP_NAME
 from pyworkflow.utils import magentaStr, createLink
 from tomo.objects import SetOfTomoMasks, SetOfTomograms
 from tomo.protocols import ProtImportTomograms
 from tomo.protocols.protocol_import_tomograms import OUTPUT_NAME
 from tomo.tests import TOMOSEGMEMTV_TEST_DATASET, DataSet_Tomosegmemtv
 from tomo.tests.test_base_centralized_layer import TestBaseCentralizedLayer
-from tomosegmemtv.protocols.protocol_tomosegmentv import outputObjects
 
 
 class TestMembrainSeg(TestBaseCentralizedLayer):
@@ -62,22 +64,36 @@ class TestMembrainSeg(TestBaseCentralizedLayer):
         protImportTomo = self.launchProtocol(protImportTomo)
         return getattr(protImportTomo, OUTPUT_NAME, None)
 
-    def _runMembrain(self, inTomograms: SetOfTomograms) -> SetOfTomoMasks:
+    def _runMembrain(self, inTomograms: SetOfTomograms,
+                     storeProbabilities: bool = False) -> Tuple[SetOfTomoMasks, SetOfTomoMasks]:
         print(magentaStr("\n==> Segmenting the membranes:"))
         protMembrainSeg = self.newProtocol(
             ProtMemBrainSeg,
             inTomograms=inTomograms,
-            segmentationThreshold=0,
-            slidingWindowSize=160)
+            storeProbabilities=storeProbabilities)
         protMembrainSeg = self.launchProtocol(protMembrainSeg)
-        return getattr(protMembrainSeg, outputObjects.tomoMasks.name, None)
+        return (getattr(protMembrainSeg, OUTPUT_TOMOMASK_NAME, None),
+                getattr(protMembrainSeg, OUTPUT_TOMOPROBMAP_NAME, None))
 
-    def test_membrain_seg(self):
-        importedTomos = self._importTomograms()
-        tomoMasks = self._runMembrain(importedTomos)
-        # Check output set
+    def _checkTomoMasks(self, tomoMasks: SetOfTomoMasks):
         self.checkTomoMasks(tomoMasks,
                             expectedSetSize=2,
                             expectedSRate=self.samplingRate,
                             expectedDimensions=self.tomoDims,
                             isHeterogeneousSet=False)
+
+    def test_membrain_seg_01(self):
+        importedTomos = self._importTomograms()
+        tomoMasks, tomoScores = self._runMembrain(importedTomos)
+        # Check the output sets
+        self._checkTomoMasks(tomoMasks)
+        self.assertIsNone(tomoScores)
+
+    def test_membrain_seg_02(self):
+        importedTomos = self._importTomograms()
+        tomoMasks, tomoScores = self._runMembrain(importedTomos,
+                                                  storeProbabilities=True)
+        # Check the output sets
+        self._checkTomoMasks(tomoMasks)
+        self._checkTomoMasks(tomoScores)
+
