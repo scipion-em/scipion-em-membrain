@@ -128,7 +128,8 @@ class ProtMemBrainSeg(EMProtocol):
                       label='Output probability maps?',
                       help='Stores probability maps obtained from 8-fold test-time augmentation in addition to the segmentations.')
 
-        form.addHidden(GPU_LIST, StringParam, default='0',
+        form.addHidden(GPU_LIST, StringParam,
+                       default='0',
                        expertLevel=LEVEL_ADVANCED,
                        label='Choose GPU IDs',
                        help='GPU device to be used. If no GPU is found, MemBrain-seg will run on CPU using the number of threads specified (much slower)')
@@ -264,6 +265,8 @@ class ProtMemBrainSeg(EMProtocol):
             errors.append(
                 'Connected components threshold threshold must be greater than zero, or negative to disable this option.')
 
+        if self.slidingWindowSize.get() % 32 != 0:
+            errors.append('Sliding window size must be multiple of 32.')
         return errors
 
     def _citations(self):
