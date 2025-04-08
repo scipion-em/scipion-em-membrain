@@ -31,7 +31,7 @@ A protocol to segment membranes in tomograms using MemBrain-seg.
 from os.path import basename
 from typing import Union
 
-from membrain import Plugin
+from membrain import Plugin, OUTPUT_TOMOMASK_NAME
 from pwem.protocols import EMProtocol
 from pyworkflow import BETA
 from pyworkflow.object import Set, Pointer
@@ -49,7 +49,6 @@ SUFFIX_SEG = 'segmented'
 SUFFIX_SCORES = 'scores'
 
 # Outputs
-OUTPUT_TOMOMASK_NAME = 'tomoMasks'
 OUTPUT_TOMOPROBMAP_NAME = 'tomoProbMaps'
 
 
