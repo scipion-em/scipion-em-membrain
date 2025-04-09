@@ -26,7 +26,7 @@
 from typing import Tuple
 
 import pyworkflow.tests as pwtests
-from membrain.protocols import ProtMemBrainSeg
+from membrain.protocols import ProtMemBrainSeg, ProtMemBrainSkeletonize
 from membrain.protocols.protocol_membrain_seg import OUTPUT_TOMOMASK_NAME, OUTPUT_TOMOPROBMAP_NAME
 from pyworkflow.utils import magentaStr, createLink
 from tomo.objects import SetOfTomoMasks, SetOfTomograms
@@ -36,7 +36,7 @@ from tomo.tests import TOMOSEGMEMTV_TEST_DATASET, DataSet_Tomosegmemtv
 from tomo.tests.test_base_centralized_layer import TestBaseCentralizedLayer
 
 
-class TestMembrainSeg(TestBaseCentralizedLayer):
+class TestMembrain(TestBaseCentralizedLayer):
     virtualTomo2 = None
     virtualTomo1 = None
     samplingRate = DataSet_Tomosegmemtv.sRate.value
@@ -64,8 +64,8 @@ class TestMembrainSeg(TestBaseCentralizedLayer):
         protImportTomo = self.launchProtocol(protImportTomo)
         return getattr(protImportTomo, OUTPUT_NAME, None)
 
-    def _runMembrain(self, inTomograms: SetOfTomograms,
-                     storeProbabilities: bool = False) -> Tuple[SetOfTomoMasks, SetOfTomoMasks]:
+    def _runMembrainSeg(self, inTomograms: SetOfTomograms,
+                        storeProbabilities: bool = False) -> Tuple[SetOfTomoMasks, SetOfTomoMasks]:
         print(magentaStr("\n==> Segmenting the membranes:"))
         protMembrainSeg = self.newProtocol(
             ProtMemBrainSeg,
@@ -74,6 +74,14 @@ class TestMembrainSeg(TestBaseCentralizedLayer):
         protMembrainSeg = self.launchProtocol(protMembrainSeg)
         return (getattr(protMembrainSeg, OUTPUT_TOMOMASK_NAME, None),
                 getattr(protMembrainSeg, OUTPUT_TOMOPROBMAP_NAME, None))
+
+    def _runMembrainSkel(self, inTomomasks: SetOfTomoMasks) -> SetOfTomoMasks:
+        print(magentaStr("\n==> Skeletonizing the membranes:"))
+        protMembrainSkel = self.newProtocol(ProtMemBrainSkeletonize,
+                                            inTomoMasks=inTomomasks)
+        protMembrainSkel = self.launchProtocol(protMembrainSkel)
+        return getattr(protMembrainSkel, OUTPUT_TOMOMASK_NAME, None)
+
 
     def _checkTomoMasks(self, tomoMasks: SetOfTomoMasks):
         self.checkTomoMasks(tomoMasks,
@@ -84,16 +92,24 @@ class TestMembrainSeg(TestBaseCentralizedLayer):
 
     def test_membrain_seg_01(self):
         importedTomos = self._importTomograms()
-        tomoMasks, tomoScores = self._runMembrain(importedTomos)
+        tomoMasks, tomoScores = self._runMembrainSeg(importedTomos)
         # Check the output sets
         self._checkTomoMasks(tomoMasks)
         self.assertIsNone(tomoScores)
 
     def test_membrain_seg_02(self):
         importedTomos = self._importTomograms()
-        tomoMasks, tomoScores = self._runMembrain(importedTomos,
-                                                  storeProbabilities=True)
+        tomoMasks, tomoScores = self._runMembrainSeg(importedTomos,
+                                                     storeProbabilities=True)
         # Check the output sets
         self._checkTomoMasks(tomoMasks)
         self._checkTomoMasks(tomoScores)
+
+    def test_membrain_skel_01(self):
+        importedTomos = self._importTomograms()
+        tomoMasks, _ = self._runMembrainSeg(importedTomos)
+        tomoMasksSkel = self._runMembrainSkel(tomoMasks)
+        self._checkTomoMasks(tomoMasksSkel)
+
+
 

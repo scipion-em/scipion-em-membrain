@@ -48,7 +48,7 @@ class ProtMemBrainSkeletonize(EMProtocol):
         https://teamtomo.org/membrain-seg/Usage/Segmentation/
     """
 
-    _label = 'tomomask skeletonization'
+    _label = 'tomomask skeletonize'
     _possibleOutputs = {OUTPUT_TOMOMASK_NAME: 'SetOfTomoMasks'}
     _devStatus = BETA
     stepsExecutionMode = STEPS_PARALLEL
