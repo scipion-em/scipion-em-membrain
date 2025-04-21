@@ -23,14 +23,8 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-import pwem
-from datetime import datetime as dt
 from scipion.install.funcs import VOID_TGZ
 from membrain.constants import *
-
-# # Environment variables are imported from here:
-# from .constants import *
 
 _logo = "icon.png"
 _references = ['lamm_membrain_2022', 'lamm_membrain_2024']
