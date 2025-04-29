@@ -195,27 +195,28 @@ class ProtMemBrainSeg(EMProtocol):
 
     # Output stuff is the same as in TomoSegMemTV protocol:
     def createOutputStep(self, tomoId: str):
-        outTomoSegs = self._createOutputSet()
-        inTomo = self.tomoDict[tomoId]
-        inTomoFileName = inTomo.getFileName()
-        tomoMask = TomoMask()
-        tomoMask.copyInfo(inTomo)
-        tomoMask.setFileName(self._getOutFileNameScipion(tomoId, SUFFIX_SEG))
-        tomoMask.setVolName(inTomoFileName)
-        outTomoSegs.append(tomoMask)
-        outTomoSegs.write()
-        self._store(outTomoSegs)
-
-        if self.storeProbabilities:
-            # We do the same thing again for the probability maps, if they exist:
-            outTomoProbs = self._createOutputSet(isProbablityMap=True)
+        with self._lock:
+            outTomoSegs = self._createOutputSet()
+            inTomo = self.tomoDict[tomoId]
+            inTomoFileName = inTomo.getFileName()
             tomoMask = TomoMask()
             tomoMask.copyInfo(inTomo)
-            tomoMask.setFileName(self._getOutFileNameScipion(tomoId, SUFFIX_SCORES))
+            tomoMask.setFileName(self._getOutFileNameScipion(tomoId, SUFFIX_SEG))
             tomoMask.setVolName(inTomoFileName)
-            outTomoProbs.append(tomoMask)
-            outTomoProbs.write()
-            self._store(outTomoProbs)
+            outTomoSegs.append(tomoMask)
+            outTomoSegs.write()
+            self._store(outTomoSegs)
+
+            if self.storeProbabilities:
+                # We do the same thing again for the probability maps, if they exist:
+                outTomoProbs = self._createOutputSet(isProbablityMap=True)
+                tomoMask = TomoMask()
+                tomoMask.copyInfo(inTomo)
+                tomoMask.setFileName(self._getOutFileNameScipion(tomoId, SUFFIX_SCORES))
+                tomoMask.setVolName(inTomoFileName)
+                outTomoProbs.append(tomoMask)
+                outTomoProbs.write()
+                self._store(outTomoProbs)
 
     # --------------------------- UTILS functions ----------------------------------
     def _getInTomos(self, retPointer: bool = False) -> Union[SetOfTomograms, Pointer]:
