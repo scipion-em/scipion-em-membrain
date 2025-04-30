@@ -25,57 +25,64 @@
 # **************************************************************************
 
 
-'''
+"""
 A protocol to segment membranes in tomograms using MemBrain-seg.
-'''
-import os
-from enum import Enum
-from membrain import Plugin
+"""
+from os.path import basename
+from typing import Union
+
+from membrain import Plugin, OUTPUT_TOMOMASK_NAME
 from pwem.protocols import EMProtocol
 from pyworkflow import BETA
+from pyworkflow.object import Set, Pointer
 from pyworkflow.protocol import PointerParam, BooleanParam, IntParam, FloatParam, StringParam, LEVEL_ADVANCED
 from pyworkflow.utils import *
-from tomo.objects import SetOfTomoMasks, TomoMask
+from tomo.objects import SetOfTomoMasks, TomoMask, SetOfTomograms
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pyworkflow.protocol import GPU_LIST
 
+# Inputs
+IN_TOMOS = 'inTomograms'
 
-OUTPUT_TOMOMASK_NAME = 'tomoMasks'
+# Suffixes
+SUFFIX_SEG = 'segmented'
+SUFFIX_SCORES = 'scores'
+
+# Outputs
 OUTPUT_TOMOPROBMAP_NAME = 'tomoProbMaps'
-OUTPUT_DIR = 'extra/'
 
 
 class ProtMemBrainSeg(EMProtocol):
-    '''
+    """
     Segment membranes in tomograms using MemBrain-seg.
 
     More info:
         https://github.com/teamtomo/membrain-seg
-    '''
+    """
 
     _label = 'tomogram membrane segmentation'
-    _possibleOutputs = {OUTPUT_TOMOMASK_NAME: SetOfTomoMasks,
-                        OUTPUT_TOMOPROBMAP_NAME: SetOfTomoMasks}
+    _possibleOutputs = {OUTPUT_TOMOMASK_NAME: 'SetOfTomoMasks',
+                        OUTPUT_TOMOPROBMAP_NAME: 'SetOfTomoMasks'}
     _devStatus = BETA
-
-    tomoMaskList = []
-    tomoProbMapList = []
-    
     stepsExecutionMode = STEPS_PARALLEL
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.tomoDict = None
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
-        ''' Define the input parameters that will be used.
+        """ Define the input parameters that will be used.
         Params:
             form: this is the form to be populated with sections and params.
-        '''
+        """
 
         # The most basic segmentation command is as follows:
         # membrain segment --ckpt-path $MEMBRAIN_SEG_MODEL --tomogram-path <path-to-your-tomo> --out-folder <your-preferred-folder>
 
         # You need a params to belong to a section:
         form.addSection(label=Message.LABEL_INPUT)
-        form.addParam('inTomograms', PointerParam,
+        form.addParam(IN_TOMOS, PointerParam,
                       pointerClass='SetOfTomograms',
                       allowsNull=False,
                       label='Input tomograms')
@@ -120,7 +127,8 @@ class ProtMemBrainSeg(EMProtocol):
                       label='Output probability maps?',
                       help='Stores probability maps obtained from 8-fold test-time augmentation in addition to the segmentations.')
 
-        form.addHidden(GPU_LIST, StringParam, default='0',
+        form.addHidden(GPU_LIST, StringParam,
+                       default='0',
                        expertLevel=LEVEL_ADVANCED,
                        label='Choose GPU IDs',
                        help='GPU device to be used. If no GPU is found, MemBrain-seg will run on CPU using the number of threads specified (much slower)')
@@ -129,22 +137,35 @@ class ProtMemBrainSeg(EMProtocol):
 
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
-
         deps = []
-        for tomo in self.inTomograms.get():
-            deps.append(self._insertFunctionStep(self.runMemBrainSeg,
-                        tomo.getFileName(), prerequisites=[], needsGPU=True))
+        self._initialize()
+        for tomoId in self.tomoDict.keys():
+            mbId = self._insertFunctionStep(self.runMemBrainSeg,
+                                            tomoId,
+                                            prerequisites=[],
+                                            needsGPU=True)
+            cOutId = self._insertFunctionStep(self.createOutputStep,
+                                              tomoId,
+                                              prerequisites=mbId,
+                                              needsGPU=False)
+            deps.append(cOutId)
+        self._insertFunctionStep(self._closeOutputSet,
+                                 prerequisites=deps,
+                                 needsGPU=False)
 
-        self._insertFunctionStep(self.createOutputStep, prerequisites=deps, needsGPU=False)
 
-    def runMemBrainSeg(self, tomoFile: str):
-        tomoBaseName = removeBaseExt(tomoFile)
+    def _initialize(self):
+        self.tomoDict = {tomo.getTsId(): tomo.clone() for tomo in self._getInTomos()}
+
+    def runMemBrainSeg(self, tomoId: str):
+        tomo = self.tomoDict[tomoId]
+        tomoFile = tomo.getFileName()
 
         # Arguments to the membrain command defined in the plugin initialization:
         args = ' segment '
         args += ' --ckpt-path ' + Plugin.getMemBrainSegModelPath()
         args += ' --tomogram-path ' + tomoFile
-        args += ' --out-folder ' + self.getWorkingDir() + '/' + OUTPUT_DIR + '/'
+        args += ' --out-folder ' + self._getExtraPath()
         args += ' --segmentation-threshold ' + str(self.segmentationThreshold)
         args += ' --sliding-window-size ' + str(self.slidingWindowSize)
 
@@ -168,50 +189,70 @@ class ProtMemBrainSeg(EMProtocol):
 
         self.runJob(Plugin.getMemBrainSegCmd(), args)
 
-        modelBaseName = os.path.basename(Plugin.getMemBrainSegModelPath())
-        OutputFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + tomoBaseName + \
-            '_' + modelBaseName + '_segmented.mrc'
-        NewOutputFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + \
-            tomoBaseName + '_segmented.mrc'
-        moveFile(OutputFile, NewOutputFile)
-
-        self.tomoMaskList.append(NewOutputFile)
-
-        if self.storeProbabilities:
-            OutputProbFile = self.getWorkingDir() + '/' + OUTPUT_DIR + '/' + \
-                tomoBaseName + '_scores.mrc'
-            self.tomoProbMapList.append(OutputProbFile)
+        outputFile = self._getOutFileNameMembrain(tomoFile)
+        newOutputFile = self._getOutFileNameScipion(tomoId, SUFFIX_SEG)
+        moveFile(outputFile, newOutputFile)
 
     # Output stuff is the same as in TomoSegMemTV protocol:
-    def createOutputStep(self):
-        labelledSet = self._genOutputSetOfTomoMasks(
-            self.tomoMaskList, 'segmented')
-        self._defineOutputs(**{OUTPUT_TOMOMASK_NAME: labelledSet})
-        self._defineSourceRelation(self.inTomograms.get(), labelledSet)
-
-        if self.tomoProbMapList:
-            # We do the same thing again for the probability maps, if they exist:
-            labelledSet = self._genOutputSetOfTomoMasks(
-                self.tomoProbMapList, 'probability map')
-            self._defineOutputs(**{OUTPUT_TOMOPROBMAP_NAME: labelledSet})
-            self._defineSourceRelation(self.inTomograms.get(), labelledSet)
-
-    def _genOutputSetOfTomoMasks(self, tomoMaskList, suffix):
-        tomoMaskSet = SetOfTomoMasks.create(
-            self._getPath(), template='tomomasks%s.sqlite', suffix=suffix)
-        inTomoSet = self.inTomograms.get()
-        tomoMaskSet.copyInfo(inTomoSet)
-        counter = 1
-        for file, inTomo in zip(tomoMaskList, inTomoSet):
+    def createOutputStep(self, tomoId: str):
+        with self._lock:
+            outTomoSegs = self._createOutputSet()
+            inTomo = self.tomoDict[tomoId]
+            inTomoFileName = inTomo.getFileName()
             tomoMask = TomoMask()
-            fn = inTomo.getFileName()
             tomoMask.copyInfo(inTomo)
-            tomoMask.setLocation((counter, file))
-            tomoMask.setVolName(self._getExtraPath(replaceBaseExt(fn, 'mrc')))
-            tomoMaskSet.append(tomoMask)
-            counter += 1
+            tomoMask.setFileName(self._getOutFileNameScipion(tomoId, SUFFIX_SEG))
+            tomoMask.setVolName(inTomoFileName)
+            outTomoSegs.append(tomoMask)
+            outTomoSegs.write()
+            self._store(outTomoSegs)
 
-        return tomoMaskSet
+            if self.storeProbabilities:
+                # We do the same thing again for the probability maps, if they exist:
+                outTomoProbs = self._createOutputSet(isProbablityMap=True)
+                tomoMask = TomoMask()
+                tomoMask.copyInfo(inTomo)
+                tomoMask.setFileName(self._getOutFileNameScipion(tomoId, SUFFIX_SCORES))
+                tomoMask.setVolName(inTomoFileName)
+                outTomoProbs.append(tomoMask)
+                outTomoProbs.write()
+                self._store(outTomoProbs)
+
+    # --------------------------- UTILS functions ----------------------------------
+    def _getInTomos(self, retPointer: bool = False) -> Union[SetOfTomograms, Pointer]:
+        inTomosPointer = getattr(self, IN_TOMOS)
+        return inTomosPointer if retPointer else inTomosPointer.get()
+
+    def _createOutputSet(self, isProbablityMap: bool = False) -> SetOfTomoMasks:
+        if isProbablityMap:
+            outName = OUTPUT_TOMOPROBMAP_NAME
+            suffix = SUFFIX_SCORES
+        else:
+            outName = OUTPUT_TOMOMASK_NAME
+            suffix = SUFFIX_SEG
+        outTomoMasks = getattr(self, outName, None)
+        if outTomoMasks:
+            outTomoMasks.enableAppend()
+        else:
+            outTomoMasks = SetOfTomoMasks.create(self._getPath(),
+                                                template='tomomasks%s.sqlite',
+                                                suffix=suffix)
+            inTomoSet = self._getInTomos()
+            outTomoMasks.copyInfo(inTomoSet)
+            outTomoMasks.setStreamState(Set.STREAM_OPEN)
+
+            self._defineOutputs(**{outName: outTomoMasks})
+            self._defineSourceRelation(self._getInTomos(retPointer=True), outTomoMasks)
+
+        return outTomoMasks
+
+    def _getOutFileNameMembrain(self, tomoFileName: str) -> str:
+        tomoBaseName = removeBaseExt(tomoFileName)
+        modelBaseName = basename(Plugin.getMemBrainSegModelPath())
+        return self._getExtraPath(f'{tomoBaseName}_{modelBaseName}_{SUFFIX_SEG}.mrc')
+
+    def _getOutFileNameScipion(self, tomoId: str, suffix: str) -> str:
+        return self._getExtraPath(f'{tomoId}_{suffix}.mrc')
 
     # --------------------------- INFO functions -----------------------------------
     def _validate(self):
@@ -225,6 +266,8 @@ class ProtMemBrainSeg(EMProtocol):
             errors.append(
                 'Connected components threshold threshold must be greater than zero, or negative to disable this option.')
 
+        if self.slidingWindowSize.get() % 32 != 0:
+            errors.append('Sliding window size must be multiple of 32.')
         return errors
 
     def _citations(self):
