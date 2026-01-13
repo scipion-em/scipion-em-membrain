@@ -25,6 +25,7 @@
 # **************************************************************************
 from typing import Union
 from membrain import Plugin, OUTPUT_TOMOMASK_NAME
+from pwem.convert.headers import setMRCSamplingRate
 from pwem.protocols import EMProtocol
 from pyworkflow import BETA
 from pyworkflow.object import Pointer, Set
@@ -100,11 +101,13 @@ class ProtMemBrainSkeletonize(EMProtocol):
 
     def _createOutputStep(self, tomoId: str):
         inTomoMask = self.tomoMaskDict[tomoId]
+        outFilename = self._getOutFileNameScipion(inTomoMask.getFileName())
+        setMRCSamplingRate(outFilename, inTomoMask.getSamplingRate())
         outTomoSegs = self._createOutputSet()
         inTomoFileName = inTomoMask.getVolName()
         tomoMask = TomoMask()
         tomoMask.copyInfo(inTomoMask)
-        tomoMask.setFileName(self._getOutFileNameScipion(inTomoMask.getFileName()))
+        tomoMask.setFileName(outFilename)
         tomoMask.setVolName(inTomoFileName)
         outTomoSegs.append(tomoMask)
         outTomoSegs.write()
