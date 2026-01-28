@@ -28,7 +28,7 @@ from membrain.constants import *
 
 _logo = "icon.png"
 _references = ['lamm_membrain_2022', 'lamm_membrain_2024']
-__version__ = "3.0.0"
+__version__ = "3.0.1"
 
 class Plugin(pwem.Plugin):
 
