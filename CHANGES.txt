@@ -1,1 +1,2 @@
+v3.0.1: Fix - the protocol for skeletonization now sets the sampling rate properly in the header of the generated files.
 v3.0.0: First release.
