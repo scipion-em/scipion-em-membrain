@@ -31,7 +31,7 @@ from membrain.constants import *
 
 _logo = "icon.png"
 _references = ['lamm_membrain_2022', 'lamm_membrain_2024']
-__version__ = "3.1.1"
+__version__ = "3.1.2"
 
 class Plugin(pwem.Plugin):
     _url = 'https://github.com/scipion-em/scipion-em-membrain'
@@ -86,14 +86,13 @@ class Plugin(pwem.Plugin):
         modelsHomeDir = cls.getVar(MODEL_MODELS_HOME)
         modelFilePath = join(modelsHomeDir, MEMBRAIN_SEG_MODEL_NAME_DEFAULT)
         modelInstallationCmd = cls.getCondaActivationCmd() + " "
-        modelInstallationCmd += f'{cls.getMemBrainSegActivation()} && '
+        modelInstallationCmd += f'{cls.getMemBrainSegActivation()} '
         if not exists(modelsHomeDir):
-            modelInstallationCmd += f'mkdir {modelsHomeDir} && '
+            modelInstallationCmd += f'&& mkdir {modelsHomeDir} '
         if exists(modelsHomeDir) and not exists(modelFilePath):
-            modelInstallationCmd += f'gdown {GDRIVE_FILEID} -O {MEMBRAIN_SEG_MODEL_NAME_DEFAULT} && '
-            modelInstallationCmd += f'mv {MEMBRAIN_SEG_MODEL_NAME_DEFAULT} {modelsHomeDir}'
-        # Generate the check file only if the model was downloaded
-        modelInstallationCmd += f'[ -f {modelFilePath} ] && touch {MODEL_DOWNLOADED}'
+            modelInstallationCmd += f'&& gdown {GDRIVE_FILEID} -O {MEMBRAIN_SEG_MODEL_NAME_DEFAULT} '
+            modelInstallationCmd += f'&& mv {MEMBRAIN_SEG_MODEL_NAME_DEFAULT} {modelsHomeDir} '
+        modelInstallationCmd += f'&& touch {MODEL_DOWNLOADED}'
 
         membrain_commands = [
             (envInstCmd, ENV_CREATED),
