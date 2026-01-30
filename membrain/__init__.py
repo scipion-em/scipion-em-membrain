@@ -23,23 +23,28 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from os.path import join, exists
+import pwem
+from pyworkflow import TOMO
 from scipion.install.funcs import VOID_TGZ
 from membrain.constants import *
 
 _logo = "icon.png"
 _references = ['lamm_membrain_2022', 'lamm_membrain_2024']
-__version__ = "3.0.1"
+__version__ = "3.1.0"
 
 class Plugin(pwem.Plugin):
-
     _url = 'https://github.com/scipion-em/scipion-em-membrain'
+    _processingField = [TOMO]
 
     @classmethod
     def _defineVariables(cls):
         """ Defines variables for this plugin. scipion3 config -p membrain will show them with current values"""
-        cls._defineVar(MEMBRAIN_SEG_ENV_VAR, DEFAULT_MEMBRAIN_SEG_ENV)
-        cls._defineVar(MEMBRAIN_SEG_ENV_ACTIVATION_VAR, DEFAULT_MEMBRAIN_SEG_ENV_ACTIVATION)
-        cls._defineVar(MEMBRAIN_SEG_MODEL_VAR, DEFAULT_MEMBRAIN_SEG_MODEL)
+        cls._defineVar(MEMBRAIN_SEG_ENV_VAR, MEMBRAIN_SEG_ENV_DEFAULT)
+        cls._defineVar(MEMBRAIN_SEG_ENV_ACTIVATION_VAR, MEMBRAIN_SEG_ENV_ACTIVATION_DEFAULT)
+        cls._defineEmVar(MEMBRAIN_SEG_HOME, MEMBRAIN_SEG + '-' + MEMBRAIN_SEG_VERSION)
+        cls._defineEmVar(MODEL_MODELS_HOME, MEMBRAIN_SEG_MODELS_DIR)
+        cls._defineVar(MEMBRAIN_SEG_MODEL_VAR, MEMBRAIN_SEG_MODEL_NAME_DEFAULT)
 
     @classmethod
     def getMemBrainSegActivation(cls):
@@ -56,76 +61,50 @@ class Plugin(pwem.Plugin):
     @classmethod
     def getMemBrainSegModelPath(cls):
         """ Return the current MemBrain-seg model defined by the environment variable """
-        # model = cls.getVar(MEMBRAIN_SEG_MODEL_VAR)
-        # if not model:
-        #     model = pwem.Config.EM_ROOT
-        #     model += "/" + MODEL_PKG_NAME + "-" + MODEL_VERSION
-        #     model += "/" + MEMBRAIN_SEG_MODEL
-        # return model
-        return cls.getVar(MEMBRAIN_SEG_MODEL_VAR)
+        return join(cls.getVar(MODEL_MODELS_HOME), cls.getVar(MEMBRAIN_SEG_MODEL_VAR))
 
     @classmethod
     def defineBinaries(cls, env):
+        ENV_CREATED = 'env-created'
+        MEMBRAIN_SEG_INSTALLED = '%s_%s_installed' % (MEMBRAIN_SEG, MEMBRAIN_SEG_VERSION)
+        MODEL_DOWNLOADED = 'model-downloaded'
 
-        # Install basic conda environment with dependencies:
-        def getCondaInstallation(version):
+        # Conda env
+        envInstCmd = cls.getCondaActivationCmd()
+        envInstCmd += ' conda create -y --name ' + \
+                           cls.getVar(MEMBRAIN_SEG_ENV_VAR) + ' -c conda-forge python=3.9 && '
+        envInstCmd += f'touch {ENV_CREATED}'
 
-            installationCmd = cls.getCondaActivationCmd()
-            installationCmd += ' conda create -y --name ' + \
-                cls.getVar(MEMBRAIN_SEG_ENV_VAR) + ' -c conda-forge python=3.9 && '
-            # installationCmd += cls.getMemBrainSegActivation() + ' && '
-            installationCmd += 'touch env-created'
+        # Membrain-seg
+        MembInstCmd = cls.getCondaActivationCmd() + " "
+        MembInstCmd += cls.getMemBrainSegActivation() + ' && '
+        MembInstCmd += 'pip install gdown && '  # We install gdown just to have a more stable way of downloading from Google Drive
+        MembInstCmd += 'pip install %s==%s && ' % (MEMBRAIN_SEG, MEMBRAIN_SEG_VERSION)
+        MembInstCmd += 'touch %s' % MEMBRAIN_SEG_INSTALLED
 
-            return installationCmd
+        # Download the model
+        modelsHomeDir = cls.getVar(MODEL_MODELS_HOME)
+        modelFilePath = join(modelsHomeDir, MEMBRAIN_SEG_MODEL_NAME_DEFAULT)
+        modelInstallationCmd = cls.getCondaActivationCmd() + " "
+        modelInstallationCmd += f'{cls.getMemBrainSegActivation()} && '
+        if not exists(modelsHomeDir):
+            modelInstallationCmd += f'mkdir {modelsHomeDir} && '
+        if not exists(modelFilePath):
+            modelInstallationCmd += f'gdown {GDRIVE_FILEID} -O {MEMBRAIN_SEG_MODEL_NAME_DEFAULT} && '
+            modelInstallationCmd += f'mv {MEMBRAIN_SEG_MODEL_NAME_DEFAULT} {modelsHomeDir} && '
+        if exists(modelFilePath):
+            # Downloaded
+            modelInstallationCmd += f'touch {MODEL_DOWNLOADED}'
 
-        # Install MemBrain-seg itself:
-        def defineMemBrainSegInstallation(version):
+        membrain_commands = [
+            (envInstCmd, ENV_CREATED),
+            (MembInstCmd, MEMBRAIN_SEG_INSTALLED),
+            (modelInstallationCmd, MODEL_DOWNLOADED)
+        ]
 
-            MEMBRAIN_SEG_INSTALLED = '%s_%s_installed' % (MEMBRAIN_SEG, MEMBRAIN_SEG_VERSION)
+        env.addPackage(MEMBRAIN_SEG,
+                       version=MEMBRAIN_SEG_VERSION,
+                       commands=membrain_commands,
+                       tar=VOID_TGZ,
+                       default=True)
 
-            installationCmd = cls.getCondaActivationCmd() + " "
-            installationCmd += cls.getMemBrainSegActivation() + ' && '
-
-            # Install a dependency for the scipion-em-membrain plugin:  
-            # NOTE: this will change once we are able to fetch the model from Zenodo (coming soon)          
-            installationCmd += 'pip install gdown && ' # We install gdown just to have a more stable way of downloading from Google Drive
-
-            # Install MemBrain-Seg itself:
-            installationCmd += 'pip install %s==%s && ' % (MEMBRAIN_SEG, MEMBRAIN_SEG_VERSION)
-
-            # Flag installation finished
-            installationCmd += 'touch %s' % MEMBRAIN_SEG_INSTALLED
-
-            membrain_commands = [
-                (getCondaInstallation(version), 'env-created'),
-                (installationCmd, MEMBRAIN_SEG_INSTALLED)
-            ]
-
-            env.addPackage('membrain_seg', version=version,
-                           commands=membrain_commands,
-                           tar=VOID_TGZ,
-                           default=True)
-
-        def getModelInstallation(model_version):
-
-            ## THIS DOES NOT WORK AS OF 16.01.2024:
-            # wget download line obtained from: https://stackoverflow.com/a/39087286
-            # modelInstallationCmd = 'curl -L -o ' + MEMBRAIN_SEG_MODEL + \
-            #     ' "https://drive.google.com/uc?export=download&id=' + \
-            #     GDRIVE_FILEID + '&confirm=yes" && '
-
-            ## So we have to go with this:
-            modelInstallationCmd = cls.getCondaActivationCmd() + " "
-            modelInstallationCmd += cls.getMemBrainSegActivation()
-            modelInstallationCmd += ' && gdown -O ' + MEMBRAIN_SEG_MODEL + ' ' + GDRIVE_FILEID
-            modelInstallationCmd += ' && touch model-downloaded.txt'
-
-            env.addPackage(MODEL_PKG_NAME, version=model_version,
-                           commands=[
-                               (modelInstallationCmd, 'model-downloaded.txt')],
-                           tar=VOID_TGZ,
-                           default=True)
-
-        defineMemBrainSegInstallation(MEMBRAIN_SEG_VERSION)
-
-        getModelInstallation(MODEL_VERSION)
