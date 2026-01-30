@@ -1,3 +1,4 @@
+v3.1.1: Hotfix - Fix re-installation issue.
 v3.1.0:
   - Users: Installs membrain-seg v0.0.10 and model MemBrain_seg_v10_beta.ckpt
   - Developers: Installer refactored.
