@@ -23,7 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from os.path import join
+from os.path import join, exists
 import pwem
 from pyworkflow import TOMO
 from scipion.install.funcs import VOID_TGZ
@@ -84,12 +84,17 @@ class Plugin(pwem.Plugin):
 
         # Download the model
         modelsHomeDir = cls.getVar(MODEL_MODELS_HOME)
+        modelFilePath = join(modelsHomeDir, MEMBRAIN_SEG_MODEL_NAME_DEFAULT)
         modelInstallationCmd = cls.getCondaActivationCmd() + " "
         modelInstallationCmd += f'{cls.getMemBrainSegActivation()} && '
-        modelInstallationCmd += f'mkdir {modelsHomeDir} && '
-        modelInstallationCmd += f'gdown {GDRIVE_FILEID} -O {MEMBRAIN_SEG_MODEL_NAME_DEFAULT} && '
-        modelInstallationCmd += f'mv {MEMBRAIN_SEG_MODEL_NAME_DEFAULT} {modelsHomeDir} && '
-        modelInstallationCmd += f'touch {MODEL_DOWNLOADED}'
+        if not exists(modelsHomeDir):
+            modelInstallationCmd += f'mkdir {modelsHomeDir} && '
+        if not exists(modelFilePath):
+            modelInstallationCmd += f'gdown {GDRIVE_FILEID} -O {MEMBRAIN_SEG_MODEL_NAME_DEFAULT} && '
+            modelInstallationCmd += f'mv {MEMBRAIN_SEG_MODEL_NAME_DEFAULT} {modelsHomeDir} && '
+        if exists(modelFilePath):
+            # Downloaded
+            modelInstallationCmd += f'touch {MODEL_DOWNLOADED}'
 
         membrain_commands = [
             (envInstCmd, ENV_CREATED),
