@@ -23,27 +23,22 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-import pwem
-
+MEMBRAIN_SEG_HOME = 'MEMBRAIN_SEG_HOME'
+MODEL_MODELS_HOME = 'MODEL_MODELS_HOME'
 MEMBRAIN_SEG = 'membrain-seg'
-MEMBRAIN_SEG_VERSION = '0.0.5'
+MEMBRAIN_SEG_MODELS_DIR = 'membrain_seg_models'
+MEMBRAIN_SEG_VERSION = '0.0.10'
 
 # Use this variable to activate an environment from the Scipion conda
 MEMBRAIN_SEG_ENV_VAR = "MEMBRAIN_SEG_ENV"
-DEFAULT_MEMBRAIN_SEG_ENV = "membrain-seg-scipion"
+MEMBRAIN_SEG_ENV_DEFAULT = f"membrain-seg-{MEMBRAIN_SEG_VERSION}"
 MEMBRAIN_SEG_ENV_ACTIVATION_VAR = "MEMBRAIN_SEG_ENV_ACTIVATION"
-DEFAULT_MEMBRAIN_SEG_ENV_ACTIVATION = "conda activate " + DEFAULT_MEMBRAIN_SEG_ENV
+MEMBRAIN_SEG_ENV_ACTIVATION_DEFAULT = "conda activate " + MEMBRAIN_SEG_ENV_DEFAULT
 
 # models
-MODEL_VERSION = '10'
-MODEL_PKG_NAME = 'membrain_seg_models'
 MEMBRAIN_SEG_MODEL_VAR = 'MEMBRAIN_SEG_MODEL'
-MEMBRAIN_SEG_MODEL = 'MemBrain_seg_v10_alpha.ckpt'
-DEFAULT_MEMBRAIN_SEG_MODEL = pwem.Config.EM_ROOT
-DEFAULT_MEMBRAIN_SEG_MODEL += "/" + MODEL_PKG_NAME + "-" + MODEL_VERSION
-DEFAULT_MEMBRAIN_SEG_MODEL += "/" + MEMBRAIN_SEG_MODEL
-GDRIVE_FILEID = '1tSQIz_UCsQZNfyHg0RxD-4meFgolszo8'
+MEMBRAIN_SEG_MODEL_NAME_DEFAULT = 'MemBrain_seg_v10_beta.ckpt'
+GDRIVE_FILEID = '1hruug1GbO4V8C4bkE5DZJeybDyOxZ7PX'
 
 # Outputs
 OUTPUT_TOMOMASK_NAME = 'tomoMasks'
