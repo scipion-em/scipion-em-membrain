@@ -31,7 +31,7 @@ from membrain.constants import *
 
 _logo = "icon.png"
 _references = ['lamm_membrain_2022', 'lamm_membrain_2024']
-__version__ = "3.1.4"
+__version__ = "3.1.5"
 
 class Plugin(pwem.Plugin):
     _url = 'https://github.com/scipion-em/scipion-em-membrain'
@@ -86,21 +86,27 @@ class Plugin(pwem.Plugin):
         modelsHomeDir = cls.getVar(MODEL_MODELS_HOME)
         modelInstallationCmd = cls.getCondaActivationCmd() + " "
         modelInstallationCmd += f'{cls.getMemBrainSegActivation()} && '
-        modelInstallationCmd += f'[ -d {modelsHomeDir} ] || mkdir -p {modelsHomeDir} && '  # Create the dir if it does not exist
-        modelInstallationCmd += f'[ ! -f "{modelsHomeDir}/{MEMBRAIN_SEG_MODEL_NAME_DEFAULT}" ] && '  # Check if the model file exists inside the models directory
+        modelInstallationCmd += f'mkdir -p {modelsHomeDir} && '  # Create the dir
         modelInstallationCmd += f'gdown {GDRIVE_FILEID} -O {MEMBRAIN_SEG_MODEL_NAME_DEFAULT} && '  # Download the model
-        modelInstallationCmd += f'mv {MEMBRAIN_SEG_MODEL_NAME_DEFAULT} {modelsHomeDir} && '  # Move to the final location
         modelInstallationCmd += f'touch {MODEL_DOWNLOADED}'
 
         membrain_commands = [
             (envInstCmd, ENV_CREATED),
             (MembInstCmd, MEMBRAIN_SEG_INSTALLED),
+        ]
+
+        model_commands = [
             (modelInstallationCmd, MODEL_DOWNLOADED)
         ]
 
         env.addPackage(MEMBRAIN,
                        version=MEMBRAIN_SEG_VERSION,
                        commands=membrain_commands,
+                       tar=VOID_TGZ,
+                       default=True)
+
+        env.addPackage(MEMBRAIN_SEG_MODELS,
+                       commands=model_commands,
                        tar=VOID_TGZ,
                        default=True)
 
