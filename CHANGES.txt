@@ -1,3 +1,4 @@
+v3.1.5: Installer improved: models and programs are identified as different binaries by Scipion.
 v3.1.4: Hotfix - Update the binary id for the installb installation mode.
 v3.1.3: Hotfix - Fix re-installation issue III.
 v3.1.2: Hotfix - Fix re-installation issue II.
