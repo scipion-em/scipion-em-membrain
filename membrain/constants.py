@@ -27,7 +27,8 @@ MEMBRAIN_SEG_HOME = 'MEMBRAIN_SEG_HOME'
 MODEL_MODELS_HOME = 'MODEL_MODELS_HOME'
 MEMBRAIN = 'membrain'
 MEMBRAIN_SEG = 'membrain-seg'
-MEMBRAIN_SEG_MODELS_DIR = 'membrain_seg_models'
+MEMBRAIN_SEG_MODELS = 'membrain-seg-models'
+MEMBRAIN_SEG_MODELS_DIR = 'membrain-seg-models'
 MEMBRAIN_SEG_VERSION = '0.0.10'
 
 # Use this variable to activate an environment from the Scipion conda
