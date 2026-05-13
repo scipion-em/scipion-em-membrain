@@ -54,10 +54,172 @@ OUTPUT_TOMOPROBMAP_NAME = 'tomoProbMaps'
 
 class ProtMemBrainSeg(EMProtocol):
     """
-    Segment membranes in tomograms using MemBrain-seg.
+    Segments cellular membranes in cryo-electron tomography datasets using
+deep learning methods provided by MemBrain-seg. The protocol is designed to
+identify membrane regions within tomograms and generate volumetric masks that
+can be used for downstream structural interpretation, particle picking,
+membrane analysis, or visualization workflows. It supports both standard
+segmentation outputs and probability maps representing membrane confidence
+scores derived from inference.
+More info: https://github.com/teamtomo/membrain-seg
 
-    More info:
-        https://github.com/teamtomo/membrain-seg
+    AI Generated:
+
+    MemBrain Membrane Segmentation (ProtMemBrainSeg) - User Manual
+        Overview
+
+        The MemBrain membrane segmentation protocol provides automated membrane
+        detection for cryo-electron tomography data using neural-network-based
+        inference methods. Its primary objective is to identify membrane-like
+        structures inside tomograms and convert them into segmentation masks that
+        can be further analyzed in biological studies. In tomographic workflows,
+        membrane segmentation is often an essential preprocessing step for the
+        study of organelles, vesicles, viral envelopes, intracellular membranes,
+        and membrane-associated macromolecular complexes.
+
+        For biological users, the protocol is particularly useful when handling
+        large tomographic datasets where manual annotation would be impractical or
+        excessively time consuming. Automated membrane segmentation allows rapid
+        extraction of membrane geometries and facilitates downstream analyses such
+        as curvature estimation, membrane tracing, subtomogram averaging
+        preparation, or visualization of cellular organization.
+
+        Inputs and General Workflow
+
+        The protocol requires one or more tomograms as input. Each tomogram is
+        independently processed to produce membrane segmentation masks. The
+        workflow applies a pretrained MemBrain-seg model that evaluates local
+        image information and predicts membrane probabilities across the entire
+        tomographic volume.
+
+        Segmentation results are stored as volumetric masks aligned with the
+        original tomograms, preserving the geometric relationship between the
+        segmented membranes and the biological sample. Optionally, probability
+        maps can also be generated, allowing users to inspect the confidence of
+        the predictions and adjust downstream interpretation accordingly.
+
+        Segmentation Thresholds and Biological Interpretation
+
+        One of the most important biological parameters is the segmentation
+        threshold. This value determines which voxels are considered membrane
+        regions based on their predicted membrane confidence score. Lower
+        thresholds generally produce larger and more inclusive membrane regions,
+        which may help recover weak or noisy membranes but can also introduce
+        false positives. Higher thresholds produce cleaner and more conservative
+        segmentations, although biologically relevant faint membranes may be
+        missed.
+
+        In practice, exploratory analyses often begin with intermediate threshold
+        values followed by visual inspection. Biological samples with low signal,
+        strong ice contamination, or highly curved membranes may require more
+        permissive thresholds. Conversely, cleaner datasets with strong membrane
+        contrast may benefit from stricter segmentation settings.
+
+        Sliding Window Inference
+
+        The protocol processes tomograms using a sliding window strategy. This
+        approach allows large tomographic datasets to be segmented even when GPU
+        memory resources are limited. The window size directly affects both
+        segmentation quality and computational cost.
+
+        Larger window sizes generally provide more contextual information to the
+        neural network and often improve segmentation continuity and membrane
+        recognition. However, they require more GPU memory and longer processing
+        times. Smaller windows reduce computational demands but may introduce
+        discontinuities or reduce segmentation quality in difficult regions.
+
+        From a biological perspective, large membrane systems such as extended
+        endoplasmic reticulum networks, mitochondrial cristae, or stacked
+        membrane assemblies may particularly benefit from larger contextual
+        windows.
+
+        Test-Time Augmentation
+
+        The protocol optionally supports test-time augmentation, an inference
+        strategy that evaluates multiple transformed versions of the same data
+        and combines the predictions into a consensus result. This usually
+        improves segmentation robustness and reduces sensitivity to noise or
+        directional artifacts.
+
+        Biologically, test-time augmentation is especially valuable for noisy
+        tomograms, low-dose acquisitions, or samples containing membranes with
+        variable orientations and curvatures. Although this approach increases
+        runtime, it often yields smoother and more reliable membrane detection.
+
+        When enabled, the protocol can additionally generate probability maps.
+        These maps are useful for advanced users who wish to evaluate prediction
+        confidence or apply custom thresholding strategies in downstream analyses.
+
+        Connected Components Analysis
+
+        The protocol can optionally label segmented regions as connected
+        components. This operation separates disconnected membrane structures and
+        stores them as independently labeled objects. Such labeling can simplify
+        the identification of isolated vesicles, organelles, or membrane patches
+        within crowded cellular environments.
+
+        A minimum size threshold may also be applied to remove very small
+        connected regions. This is particularly useful for eliminating isolated
+        noise artifacts or fragmented predictions that are unlikely to represent
+        biologically meaningful membranes.
+
+        From a biological perspective, careful selection of the connected
+        component threshold is important. Excessively aggressive filtering may
+        remove small but relevant membrane structures, while insufficient
+        filtering may preserve noisy artifacts.
+
+        Outputs and Their Interpretation
+
+        The protocol produces segmented membrane masks for each input tomogram.
+        These outputs retain the spatial dimensions and sampling information of
+        the original datasets, enabling direct integration with visualization and
+        analysis software commonly used in cryo-electron tomography workflows.
+
+        When probability map generation is enabled, additional volumetric outputs
+        containing membrane confidence values are also produced. These maps are
+        particularly useful for quality assessment, threshold optimization, and
+        quantitative analyses based on prediction confidence.
+
+        The resulting segmentations can be used in many downstream biological
+        applications, including membrane tracing, subtomogram particle selection,
+        organelle morphology studies, structural annotation, and spatial analysis
+        of membrane-associated complexes.
+
+        Practical Recommendations
+
+        For most biological applications, enabling test-time augmentation is
+        recommended because it generally improves segmentation quality and
+        robustness. Although runtime increases, the gain in segmentation
+        consistency is often substantial, especially for noisy tomograms.
+
+        Users working with limited GPU memory may reduce the sliding window size,
+        but segmentation quality should always be visually inspected afterward.
+        Larger windows are preferable whenever computational resources allow.
+
+        Connected component labeling is particularly useful for cellular datasets
+        containing many independent membrane structures. However, thresholding
+        parameters should be selected carefully to avoid removing biologically
+        meaningful small objects.
+
+        Probability maps are valuable when segmentation confidence needs to be
+        evaluated quantitatively or when additional downstream filtering is
+        planned. For rapid exploratory analyses, standard segmentation masks are
+        often sufficient.
+
+        Final Perspective
+
+        Automated membrane segmentation has become an essential capability in
+        cryo-electron tomography because modern datasets are increasingly large
+        and structurally complex. By combining deep learning segmentation with
+        scalable tomographic processing, this protocol enables efficient and
+        biologically meaningful extraction of membrane structures from cellular
+        environments.
+
+        Successful membrane analysis depends not only on computational accuracy
+        but also on careful biological interpretation of segmentation thresholds,
+        confidence maps, and connected structures. Thoughtful parameter selection
+        and visual validation remain essential for obtaining reliable membrane
+        representations suitable for downstream structural biology studies.
     """
 
     _label = 'tomogram membrane segmentation'
@@ -184,7 +346,7 @@ class ProtMemBrainSeg(EMProtocol):
             if self.connectedComponentsThreshold > 0:
                 args += ' --connected-component-thres ' + \
                     str(self.connectedComponentsThreshold)
-            
+
         args += " " + self.additionalArgs.get()
 
         self.runJob(Plugin.getMemBrainSegCmd(), args)

@@ -42,11 +42,128 @@ SUFFIX_SKEL = 'skel'
 
 class ProtMemBrainSkeletonize(EMProtocol):
     """
-    Generate a skeletonized version of the membrane segmentations, similar to the output of tomosegmemtv (
-    https://github.com/anmartinezs/pyseg_system/tree/master/code/tomosegmemtv)
+    Generate a skeletonized version of the membrane segmentations, similar to the output of tomosegmemtv.
+    (https://github.com/anmartinezs/pyseg_system/tree/master/code/tomosegmemtv)
+    More info: https://teamtomo.org/membrain-seg/Usage/Segmentation/
 
-    More info:
-        https://teamtomo.org/membrain-seg/Usage/Segmentation/
+    AI Generated:
+
+    MemBrain Skeletonize (ProtMemBrainSkeletonize) — User Manual
+        Overview
+
+        The MemBrain Skeletonize protocol generates simplified skeleton
+        representations from membrane segmentation volumes obtained in
+        cryo-electron tomography workflows. Its purpose is to convert dense
+        membrane masks into thinner structural traces that preserve the
+        essential topology and connectivity of the segmented membranes while
+        reducing geometric complexity.
+
+        Skeletonization is particularly useful in structural cell biology
+        because it enables downstream quantitative analyses of membrane
+        organization, connectivity, curvature, and network architecture.
+        Instead of working with full volumetric segmentations, researchers can
+        analyze compact representations that highlight the central paths and
+        structural continuity of membrane systems.
+
+        This protocol is conceptually similar to the skeletonization procedures
+        traditionally associated with tomosegmemtv workflows and is integrated
+        into modern MemBrain-seg processing pipelines for tomographic membrane
+        analysis.
+
+        Inputs and Biological Context
+
+        The protocol requires one or more membrane segmentation masks as input.
+        These segmentations typically originate from automated or semi-automated
+        membrane detection methods applied to cryo-electron tomography data.
+        Each mask represents regions interpreted as biological membranes within
+        the tomographic volume.
+
+        In practical biological studies, these segmentations may correspond to
+        organelle membranes, vesicles, endoplasmic reticulum networks, plasma
+        membranes, mitochondrial structures, or other intracellular membrane
+        systems. Skeletonization provides a cleaner geometric abstraction that
+        facilitates interpretation of membrane organization at the systems level.
+
+        General Workflow
+
+        During execution, the protocol processes each segmentation independently
+        and produces a skeletonized membrane representation preserving the
+        original spatial correspondence and tomographic metadata. The resulting
+        skeletons remain associated with their parent tomograms and can therefore
+        be integrated directly into larger cryo-electron tomography workflows.
+
+        The workflow is designed for batch execution and supports parallel
+        processing of multiple tomograms. This is especially important in
+        high-throughput cryo-ET studies where large collections of membrane
+        segmentations must be analyzed consistently.
+
+        GPU Acceleration and Computational Performance
+
+        The protocol supports GPU acceleration when compatible hardware is
+        available. GPU execution significantly improves performance for large
+        tomographic datasets, particularly when membrane segmentations contain
+        extensive volumetric information or highly connected membrane systems.
+
+        If GPU resources are unavailable, the protocol can still operate on CPU
+        resources, although execution may become substantially slower for large
+        tomograms. In practical facility environments, GPU acceleration is
+        generally recommended for efficient large-scale membrane analysis.
+
+        Interpretation of Skeletonized Membranes
+
+        The resulting skeletons provide a reduced geometric description of the
+        membrane architecture while preserving the biologically meaningful
+        connectivity of the original segmentation. These skeletons are often
+        easier to visualize and quantify than dense volumetric masks.
+
+        From a biological perspective, skeletonization is especially useful for
+        studying membrane continuity, branching behavior, tubular organization,
+        and large-scale structural connectivity inside cells. For example,
+        reticulated membrane systems such as the endoplasmic reticulum or
+        mitochondrial networks can be analyzed more effectively through their
+        skeleton representations.
+
+        However, users should remember that skeletonization simplifies membrane
+        geometry and may omit fine volumetric details such as membrane thickness
+        or subtle local variations. Consequently, the skeleton should be viewed
+        as a topological representation rather than a complete physical model of
+        the membrane surface.
+
+        Outputs and Integration
+
+        The protocol produces a new set of tomographic masks corresponding to
+        the skeletonized membrane representations. These outputs preserve the
+        spatial calibration and metadata of the original segmentation dataset,
+        enabling direct compatibility with visualization tools and downstream
+        quantitative analysis workflows.
+
+        The generated skeletons can be combined with additional analyses such as
+        membrane graph extraction, connectivity measurements, curvature studies,
+        or structural tracing pipelines. They are also useful for simplified
+        visualization in crowded tomographic environments.
+
+        Practical Recommendations
+
+        For best biological results, the input membrane segmentations should be
+        reasonably clean and continuous before skeletonization. Noisy or highly
+        fragmented segmentations may produce unstable or biologically ambiguous
+        skeletons.
+
+        In many cryo-ET workflows, it is advisable to visually inspect membrane
+        segmentations prior to skeletonization and, if necessary, refine the
+        segmentation quality to avoid disconnected or artifactual structures.
+        High-quality segmentation typically leads to much more interpretable
+        skeleton representations.
+
+        Final Perspective
+
+        The MemBrain Skeletonize protocol provides a practical way to transform
+        membrane segmentations into simplified structural representations that
+        preserve membrane topology while facilitating quantitative and visual
+        analysis. For cryo-electron tomography researchers studying complex
+        intracellular membrane systems, skeletonization offers an efficient and
+        biologically meaningful bridge between volumetric segmentation and
+        network-level structural interpretation.
     """
 
     _label = 'tomomask skeletonize'
