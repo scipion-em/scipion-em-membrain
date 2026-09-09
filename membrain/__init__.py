@@ -31,7 +31,7 @@ from membrain.constants import *
 
 _logo = "icon.png"
 _references = ['lamm_membrain_2022', 'lamm_membrain_2024']
-__version__ = "3.1.5"
+__version__ = "3.1.6"
 
 class Plugin(pwem.Plugin):
     _url = 'https://github.com/scipion-em/scipion-em-membrain'
